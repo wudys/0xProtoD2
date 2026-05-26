@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 import shutil
 import subprocess
@@ -14,6 +15,8 @@ from config import (
     EN_NERD_FONT_PATH,
     FONT_PATCHER_CACHE_PATH,
     FONT_PATCHER_URL,
+    get_prepared_korean_font_paths,
+    get_prepared_korean_font_plan,
     NERD_FONT_VERSION_PATH,
     NO_LIGATURE_FONT_PATH,
 )
@@ -60,24 +63,32 @@ def check_font_directories():
     return True
 
 
-def find_no_ligature_fonts():
-    """Nerd Font 패치 대상이 되는 No Ligatures 폰트를 찾습니다."""
-    if not os.path.exists(NO_LIGATURE_FONT_PATH):
+def find_patch_source_fonts(font_dir):
+    """Nerd Font 패치 대상이 되는 TTF 원본 폰트를 찾습니다."""
+    if not os.path.exists(font_dir):
         return []
 
     font_files = []
-    for filename in os.listdir(NO_LIGATURE_FONT_PATH):
+    for filename in os.listdir(font_dir):
         lowered = filename.lower()
         if not lowered.endswith(".ttf"):
             continue
         if "regular" in lowered or "bold" in lowered or "italic" in lowered:
-            font_files.append(os.path.join(NO_LIGATURE_FONT_PATH, filename))
+            font_files.append(os.path.join(font_dir, filename))
 
     return sorted(font_files)
 
 
+def find_nerd_font_source_fonts():
+    """Ligatures/NL Nerd Font Mono 패치 대상을 모두 찾습니다."""
+    return sorted(
+        find_patch_source_fonts(EN_FONT_PATH)
+        + find_patch_source_fonts(NO_LIGATURE_FONT_PATH)
+    )
+
+
 def get_expected_nerd_font_files(source_fonts):
-    """No Ligatures 입력 폰트에 대응하는 Nerd Font Mono 결과물을 계산합니다."""
+    """입력 폰트에 대응하는 Nerd Font Mono 결과물을 계산합니다."""
     expected_files = []
     for font_path in source_fonts:
         filename = os.path.basename(font_path)
@@ -90,8 +101,9 @@ def get_expected_nerd_font_files(source_fonts):
         else:
             continue
 
+        family_suffix = "NLNerdFontMono" if "-NL" in filename else "NerdFontMono"
         expected_files.append(
-            os.path.join(EN_NERD_FONT_PATH, f"0xProtoNLNerdFontMono-{style}.ttf")
+            os.path.join(EN_NERD_FONT_PATH, f"0xProto{family_suffix}-{style}.ttf")
         )
 
     return sorted(expected_files)
@@ -118,6 +130,27 @@ def should_patch_nerd_fonts(expected_files, current_version, source_version):
     if any(not os.path.exists(path) for path in expected_files):
         return True
     return current_version != source_version
+
+
+def get_font_patcher_version(patcher_path=None):
+    """font-patcher 스크립트에서 Nerd Fonts Patcher 버전을 읽습니다."""
+    if patcher_path is None:
+        patcher_path = os.path.join(FONT_PATCHER_CACHE_PATH, "font-patcher")
+
+    content = read_text_file(patcher_path)
+    if not content:
+        return None
+
+    match = re.search(r'^\s*version\s*=\s*["\']([^"\']+)["\']', content, re.MULTILINE)
+    if not match:
+        return None
+
+    return f"v{match.group(1)}"
+
+
+def get_nerd_font_dependency_version(source_version, patcher_version):
+    """Nerd Font 캐시를 무효화할 dependency version 문자열을 만듭니다."""
+    return f"0xProto={source_version}; NerdFontsPatcher={patcher_version}"
 
 
 def _download_and_extract_font_patcher(work_dir):
@@ -180,15 +213,15 @@ def _patch_nerd_fonts_with_patcher(fontforge_bin, patcher_path, source_fonts):
 
 
 def patch_nerd_fonts():
-    """0xProto No Ligatures 폰트를 Nerd Font Mono로 패치합니다."""
+    """0xProto Ligatures/NL 폰트를 Nerd Font Mono로 패치합니다."""
     fontforge_bin = shutil.which("fontforge")
     if not fontforge_bin:
         print("[ERROR] fontforge 실행 파일을 찾을 수 없습니다.")
         return False
 
-    source_fonts = find_no_ligature_fonts()
+    source_fonts = find_nerd_font_source_fonts()
     if not source_fonts:
-        print(f"[ERROR] {NO_LIGATURE_FONT_PATH}에서 패치할 TTF 파일을 찾을 수 없습니다.")
+        print("[ERROR] Nerd Font Mono로 패치할 TTF 파일을 찾을 수 없습니다.")
         return False
 
     expected_files = get_expected_nerd_font_files(source_fonts)
@@ -198,12 +231,25 @@ def patch_nerd_fonts():
         print(f"[ERROR] 0xProto 버전 파일을 찾을 수 없습니다: {EN_FONT_VERSION_PATH}")
         return False
 
-    if not should_patch_nerd_fonts(expected_files, current_version, source_version):
-        print("[INFO] Nerd Font Mono 패치 결과물이 이미 있어 건너뜁니다.")
-        return True
-
     try:
         patcher_path = _get_or_download_font_patcher()
+        patcher_version = get_font_patcher_version(patcher_path)
+        if not patcher_version:
+            print(f"[ERROR] Nerd Font Patcher 버전을 읽을 수 없습니다: {patcher_path}")
+            return False
+
+        dependency_version = get_nerd_font_dependency_version(
+            source_version,
+            patcher_version,
+        )
+        if not should_patch_nerd_fonts(
+            expected_files,
+            current_version,
+            dependency_version,
+        ):
+            print("[INFO] Nerd Font Mono 패치 결과물이 이미 있어 건너뜁니다.")
+            return True
+
         if not _patch_nerd_fonts_with_patcher(
             fontforge_bin,
             patcher_path,
@@ -211,7 +257,7 @@ def patch_nerd_fonts():
         ):
             return False
 
-        write_text_file(NERD_FONT_VERSION_PATH, source_version)
+        write_text_file(NERD_FONT_VERSION_PATH, dependency_version)
     except Exception as e:
         print(f"[ERROR] Nerd Font 패치 중 오류 발생: {e}")
         return False
@@ -246,11 +292,10 @@ def run_build_fonts():
 
     script_path = os.path.join(os.path.dirname(__file__), "hangulify.py")
     with tempfile.TemporaryDirectory() as work_dir:
-        prepared_fonts = {}
         for weight in ("regular", "bold"):
-            output_path = os.path.join(work_dir, f"D2Coding-{weight}.ttf")
-            nerd_mono_output_path = os.path.join(
-                work_dir, f"D2Coding-{weight}-nerd-mono.ttf"
+            output_path, nerd_mono_output_path = get_prepared_korean_font_paths(
+                work_dir,
+                weight,
             )
             if not run_prepare_korean_font(
                 fontforge_bin, script_path, weight, output_path
@@ -264,8 +309,6 @@ def run_build_fonts():
                 is_nerd_font=True,
             ):
                 return False
-            prepared_fonts[weight] = (output_path, nerd_mono_output_path)
-        prepared_fonts["italic"] = prepared_fonts["regular"]
 
         processes = [
             subprocess.Popen(
@@ -279,7 +322,9 @@ def run_build_fonts():
                     nerd_mono_ko_font_path,
                 ]
             )
-            for weight, (ko_font_path, nerd_mono_ko_font_path) in prepared_fonts.items()
+            for weight, (ko_font_path, nerd_mono_ko_font_path) in get_prepared_korean_font_plan(
+                work_dir
+            ).items()
         ]
         return_codes = [process.wait() for process in processes]
         return all(return_code == 0 for return_code in return_codes)

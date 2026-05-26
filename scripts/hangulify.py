@@ -20,6 +20,8 @@ from config import (
     EN_NERD_FONT_PATH,
     FONT_FAMILY_ALIASES,
     FONT_FAMILY_OUTPUT_PATHS,
+    get_prepared_korean_font_paths,
+    get_prepared_korean_font_plan,
     NO_LIGATURE_FONT_PATH,
     OLD_FONT_NAME,
 )
@@ -69,6 +71,8 @@ def format_family_name(family_name: str) -> str:
     """파일 친화적인 원본 family 이름을 UI에 표시할 family 이름으로 바꿉니다."""
     if "NLNerdFontMono" in family_name:
         return family_name.replace("NLNerdFontMono", " NL Nerd Font Mono")
+    if "NerdFontMono" in family_name:
+        return family_name.replace("NerdFontMono", " Nerd Font Mono")
     if family_name.endswith("NL"):
         return f"{family_name[:-2]} NL"
     return family_name
@@ -76,8 +80,10 @@ def format_family_name(family_name: str) -> str:
 
 def format_postscript_family_name(family_name: str) -> str:
     """공백 없는 PostScript/file family 이름을 만듭니다."""
-    return family_name.replace(" NL Nerd Font Mono", "-NL-NerdFontMono").replace(
-        " NL", "-NL"
+    return (
+        family_name.replace(" NL Nerd Font Mono", "-NL-NerdFontMono")
+        .replace(" Nerd Font Mono", "-NerdFontMono")
+        .replace(" NL", "-NL")
     )
 
 
@@ -322,29 +328,17 @@ def generate_font_files(
 def get_output_dir(family_name: str, base_dir: str = BUILT_FONTS_PATH) -> str:
     for family_alias, output_dir in FONT_FAMILY_OUTPUT_PATHS.items():
         if family_name.startswith(family_alias):
+            family_suffix = family_name[len(family_alias):]
+            subdir = "NL" if family_suffix.startswith(" NL") else None
             if base_dir == BUILT_FONTS_PATH:
+                if subdir:
+                    return os.path.join(output_dir, subdir)
                 return output_dir
+            if subdir:
+                return os.path.join(base_dir, family_alias, subdir)
             return os.path.join(base_dir, family_alias)
 
     return base_dir
-
-
-def scale_font_em_units(font: fontforge.font, target_em: int) -> None:
-    """
-    폰트의 Em 단위를 조정하고 모든 글리프를 스케일링합니다.
-    """
-    if font.em == target_em:
-        return
-
-    scale_factor = target_em / font.em
-
-    font.em = target_em
-    font.selection.all()
-    font.transform((scale_factor, 0, 0, scale_factor, 0, 0))
-
-    print(
-        f"[INFO] 폰트 Em 단위를 {int(target_em / scale_factor)}에서 {target_em}로 조정했습니다."
-    )
 
 
 def merge_korean_glyphs(
@@ -415,7 +409,11 @@ def process_font_file(
     return success
 
 
-def find_font_files(directory: str, weight: str = None) -> list:
+def find_font_files(
+    directory: str,
+    weight: str = None,
+    name_part: str = None,
+) -> list:
     """
     지정된 디렉터리에서 폰트 파일을 찾습니다.
 
@@ -432,9 +430,12 @@ def find_font_files(directory: str, weight: str = None) -> list:
     font_files = []
     for filename in os.listdir(directory):
         if filename.lower().endswith((".ttf", ".otf")):
+            lowered = filename.lower()
+            if name_part and name_part.lower() not in lowered:
+                continue
             if weight is None:
                 font_files.append(os.path.join(directory, filename))
-            elif weight.lower() in filename.lower():
+            elif weight.lower() in lowered:
                 font_files.append(os.path.join(directory, filename))
 
     return sorted(font_files)
@@ -453,8 +454,9 @@ def _process_font_variant(
     is_nerd_font: bool,
     weight: str,
     ko_font_path: str,
+    name_part: str = None,
 ) -> bool:
-    en_files = find_font_files(en_font_path, weight)
+    en_files = find_font_files(en_font_path, weight, name_part)
     style = f"{label}-{weight.capitalize()}"
 
     if not en_files:
@@ -509,23 +511,37 @@ def prepare_korean_font(
         ko_font.close()
 
 
-def build_weight(weight: str, ko_font_path: str) -> bool:
-    return build_weight_with_variants(weight, ko_font_path, ko_font_path)
-
-
 def build_weight_with_variants(
     weight: str, ko_font_path: str, nerd_mono_ko_font_path: str
 ) -> bool:
     variants = [
-        ("Ligatures", EN_FONT_PATH, False, ko_font_path),
-        ("No-Ligatures", NO_LIGATURE_FONT_PATH, False, ko_font_path),
-        ("NerdFontMono", EN_NERD_FONT_PATH, True, nerd_mono_ko_font_path),
+        ("Ligatures", EN_FONT_PATH, False, ko_font_path, None),
+        ("No-Ligatures", NO_LIGATURE_FONT_PATH, False, ko_font_path, None),
+        (
+            "Ligatures-NerdFontMono",
+            EN_NERD_FONT_PATH,
+            True,
+            nerd_mono_ko_font_path,
+            "0xProtoNerdFontMono",
+        ),
+        (
+            "No-Ligatures-NerdFontMono",
+            EN_NERD_FONT_PATH,
+            True,
+            nerd_mono_ko_font_path,
+            "0xProtoNLNerdFontMono",
+        ),
     ]
 
     success = True
-    for label, en_font_path, is_nerd_font, variant_ko_font_path in variants:
+    for label, en_font_path, is_nerd_font, variant_ko_font_path, name_part in variants:
         if not _process_font_variant(
-            label, en_font_path, is_nerd_font, weight, variant_ko_font_path
+            label,
+            en_font_path,
+            is_nerd_font,
+            weight,
+            variant_ko_font_path,
+            name_part,
         ):
             success = False
 
@@ -542,11 +558,11 @@ def build_fonts() -> bool:
 
     with tempfile.TemporaryDirectory() as work_dir:
         success = True
-        prepared_fonts = {}
+        prepared_weights = set()
         for weight in ("regular", "bold"):
-            ko_cache_path = os.path.join(work_dir, f"D2Coding-{weight}.ttf")
-            nerd_mono_ko_cache_path = os.path.join(
-                work_dir, f"D2Coding-{weight}-nerd-mono.ttf"
+            ko_cache_path, nerd_mono_ko_cache_path = get_prepared_korean_font_paths(
+                work_dir,
+                weight,
             )
             if not prepare_korean_font(weight, ko_cache_path):
                 success = False
@@ -556,12 +572,12 @@ def build_fonts() -> bool:
             ):
                 success = False
                 continue
-            prepared_fonts[weight] = (ko_cache_path, nerd_mono_ko_cache_path)
+            prepared_weights.add(weight)
 
-        if "regular" in prepared_fonts:
-            prepared_fonts["italic"] = prepared_fonts["regular"]
-
-        for weight, (ko_cache_path, nerd_mono_ko_cache_path) in prepared_fonts.items():
+        for weight, (ko_cache_path, nerd_mono_ko_cache_path) in get_prepared_korean_font_plan(
+            work_dir,
+            prepared_weights,
+        ).items():
             if not build_weight_with_variants(
                 weight, ko_cache_path, nerd_mono_ko_cache_path
             ):

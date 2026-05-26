@@ -15,10 +15,8 @@ sys.path.insert(0, os.path.dirname(__file__))
 
 from config import (
     EN_FONT_PATH,
-    KO_FONT_PATH,
     EN_NERD_FONT_PATH,
     BUILT_FONTS_PATH,
-    ASSETS_PATH
 )
 import config
 
@@ -127,8 +125,15 @@ class TestFontBuildProcess(unittest.TestCase):
 
         calls = []
 
-        def record_variant(label, en_font_path, is_nerd_font, weight, ko_font_path):
-            calls.append((label, is_nerd_font, ko_font_path))
+        def record_variant(
+            label,
+            en_font_path,
+            is_nerd_font,
+            weight,
+            ko_font_path,
+            name_part=None,
+        ):
+            calls.append((is_nerd_font, ko_font_path))
             return True
 
         with mock.patch.object(hangulify, "_process_font_variant", record_variant):
@@ -141,9 +146,10 @@ class TestFontBuildProcess(unittest.TestCase):
         self.assertEqual(
             calls,
             [
-                ("Ligatures", False, "/tmp/D2Coding-regular.ttf"),
-                ("No-Ligatures", False, "/tmp/D2Coding-regular.ttf"),
-                ("NerdFontMono", True, "/tmp/D2Coding-regular-nerd-mono.ttf"),
+                (False, "/tmp/D2Coding-regular.ttf"),
+                (False, "/tmp/D2Coding-regular.ttf"),
+                (True, "/tmp/D2Coding-regular-nerd-mono.ttf"),
+                (True, "/tmp/D2Coding-regular-nerd-mono.ttf"),
             ],
         )
 
@@ -316,42 +322,81 @@ class TestFontBuildProcess(unittest.TestCase):
 
             self.assertEqual(find_font_files(font_dir), [ttf_path])
 
-    def test_directory_structure(self):
-        """필요한 디렉터리 구조가 존재하는지 테스트"""
-        print("\n=== 디렉터리 구조 테스트 ===")
+    def test_find_font_files_filters_nerd_mono_ligature_sources_explicitly(self):
+        """Nerd Font Mono source 검색은 L/NL 파일을 서로 섞지 않습니다."""
+        import tempfile
+        from hangulify import find_font_files
 
-        # 필수 디렉터리들
-        required_dirs = {
-            "Assets": ASSETS_PATH,
-            "English Font": EN_FONT_PATH,
-            "Korean Font": KO_FONT_PATH,
-            "Nerd Font": EN_NERD_FONT_PATH
-        }
+        filenames = [
+            "0xProtoNerdFontMono-Regular.ttf",
+            "0xProtoNerdFontMono-Bold.ttf",
+            "0xProtoNLNerdFontMono-Regular.ttf",
+            "0xProtoNLNerdFontMono-Bold.ttf",
+        ]
+        with tempfile.TemporaryDirectory() as font_dir:
+            for filename in filenames:
+                open(os.path.join(font_dir, filename), "w").close()
 
-        for name, path in required_dirs.items():
-            with self.subTest(directory=name):
-                self.assertTrue(os.path.exists(path),
-                    f"{name} 디렉터리가 존재하지 않습니다: {path}")
-                print(f"✓ {name} 디렉터리 확인: {path}")
+            self.assertEqual(
+                [os.path.basename(path) for path in find_font_files(
+                    font_dir,
+                    "regular",
+                    "0xProtoNerdFontMono",
+                )],
+                ["0xProtoNerdFontMono-Regular.ttf"],
+            )
+            self.assertEqual(
+                [os.path.basename(path) for path in find_font_files(
+                    font_dir,
+                    "regular",
+                    "0xProtoNLNerdFontMono",
+                )],
+                ["0xProtoNLNerdFontMono-Regular.ttf"],
+            )
 
-    def test_font_files_existence(self):
-        """각 디렉터리에 폰트 파일이 존재하는지 테스트"""
-        print("\n=== 폰트 파일 존재 테스트 ===")
+    def test_build_weight_with_variants_maps_each_variant_to_expected_source_filter(self):
+        """각 variant는 의도한 영문 source 디렉터리와 Nerd source 필터를 사용합니다."""
+        import hangulify
 
-        font_dirs = {
-            "English Font": EN_FONT_PATH,
-            "Korean Font": KO_FONT_PATH,
-        }
+        calls = []
 
-        for name, path in font_dirs.items():
-            with self.subTest(directory=name):
-                if os.path.exists(path):
-                    ttf_files = [f for f in os.listdir(path) if f.lower().endswith('.ttf')]
-                    self.assertGreater(len(ttf_files), 0,
-                        f"{name} 디렉터리에 TTF 파일이 없습니다: {path}")
-                    print(f"✓ {name}: {len(ttf_files)}개 TTF 파일 발견")
-                    for ttf_file in ttf_files:
-                        print(f"  - {ttf_file}")
+        def record_variant(
+            label,
+            en_font_path,
+            is_nerd_font,
+            weight,
+            ko_font_path,
+            name_part=None,
+        ):
+            calls.append((en_font_path, is_nerd_font, name_part))
+            return True
+
+        with mock.patch.object(hangulify, "_process_font_variant", record_variant):
+            self.assertTrue(
+                hangulify.build_weight_with_variants(
+                    "regular",
+                    "/tmp/D2Coding-regular.ttf",
+                    "/tmp/D2Coding-regular-nerd-mono.ttf",
+                )
+            )
+
+        self.assertEqual(
+            calls,
+            [
+                (EN_FONT_PATH, False, None),
+                (config.NO_LIGATURE_FONT_PATH, False, None),
+                (
+                    EN_NERD_FONT_PATH,
+                    True,
+                    "0xProtoNerdFontMono",
+                ),
+                (
+                    EN_NERD_FONT_PATH,
+                    True,
+                    "0xProtoNLNerdFontMono",
+                ),
+            ],
+        )
 
     def test_get_font_style_keeps_filename_precedence(self):
         """파일명 기반 스타일 판별 우선순위를 유지합니다."""
@@ -395,8 +440,16 @@ class TestFontBuildProcess(unittest.TestCase):
             "ZxProtoD2 NL Nerd Font Mono",
         )
         self.assertEqual(
+            update_family_name("0xProto Nerd Font Mono", "0xProto", "ZxProtoD2"),
+            "ZxProtoD2 Nerd Font Mono",
+        )
+        self.assertEqual(
             format_postscript_family_name("0xProtoD2 NL Nerd Font Mono"),
             "0xProtoD2-NL-NerdFontMono",
+        )
+        self.assertEqual(
+            format_postscript_family_name("0xProtoD2 Nerd Font Mono"),
+            "0xProtoD2-NerdFontMono",
         )
         self.assertEqual(
             format_postscript_family_name("0xProtoD2 NL"),
@@ -434,8 +487,16 @@ class TestFontBuildProcess(unittest.TestCase):
             os.path.join(BUILT_FONTS_PATH, "0xProtoD2"),
         )
         self.assertEqual(
-            get_output_dir("ZxProtoD2 NL Nerd Font Mono"),
+            get_output_dir("ZxProtoD2 Nerd Font Mono"),
             os.path.join(BUILT_FONTS_PATH, "ZxProtoD2"),
+        )
+        self.assertEqual(
+            get_output_dir("0xProtoD2 NL"),
+            os.path.join(BUILT_FONTS_PATH, "0xProtoD2", "NL"),
+        )
+        self.assertEqual(
+            get_output_dir("ZxProtoD2 NL Nerd Font Mono"),
+            os.path.join(BUILT_FONTS_PATH, "ZxProtoD2", "NL"),
         )
 
     def test_nerd_font_does_not_generate_webfont(self):
@@ -465,7 +526,7 @@ class TestFontBuildProcess(unittest.TestCase):
             )
 
     def test_generate_font_files_applies_built_font_version(self):
-        """최종 산출 폰트에는 built_fonts/version 값을 version 메타데이터로 적용합니다."""
+        """최종 산출 폰트에는 repo FONT_VERSION 값을 version 메타데이터로 적용합니다."""
         from hangulify import generate_font_files
 
         class FakeFont:
@@ -585,7 +646,7 @@ class TestFontBuildProcess(unittest.TestCase):
         with mock.patch.object(
             hangulify,
             "_process_font_variant",
-            side_effect=[True, False, True],
+            side_effect=[True, False, True, True],
         ):
             self.assertFalse(
                 hangulify.build_weight_with_variants(
@@ -601,6 +662,9 @@ class TestFontBuildProcess(unittest.TestCase):
 
         expected_files = get_expected_nerd_font_files(
             [
+                os.path.join(config.EN_FONT_PATH, "0xProto-Regular.ttf"),
+                os.path.join(config.EN_FONT_PATH, "0xProto-Bold.ttf"),
+                os.path.join(config.EN_FONT_PATH, "0xProto-Italic.ttf"),
                 os.path.join(config.NO_LIGATURE_FONT_PATH, "0xProto-Regular-NL.ttf"),
                 os.path.join(config.NO_LIGATURE_FONT_PATH, "0xProto-Bold-NL.ttf"),
                 os.path.join(config.NO_LIGATURE_FONT_PATH, "0xProto-Italic-NL.ttf"),
@@ -613,6 +677,9 @@ class TestFontBuildProcess(unittest.TestCase):
                 os.path.join(config.EN_NERD_FONT_PATH, "0xProtoNLNerdFontMono-Bold.ttf"),
                 os.path.join(config.EN_NERD_FONT_PATH, "0xProtoNLNerdFontMono-Italic.ttf"),
                 os.path.join(config.EN_NERD_FONT_PATH, "0xProtoNLNerdFontMono-Regular.ttf"),
+                os.path.join(config.EN_NERD_FONT_PATH, "0xProtoNerdFontMono-Bold.ttf"),
+                os.path.join(config.EN_NERD_FONT_PATH, "0xProtoNerdFontMono-Italic.ttf"),
+                os.path.join(config.EN_NERD_FONT_PATH, "0xProtoNerdFontMono-Regular.ttf"),
             ],
         )
         with mock.patch("build.os.path.exists", return_value=True):
@@ -735,14 +802,17 @@ class TestFontBuildProcess(unittest.TestCase):
         import build
 
         source_fonts = [
+            "/fonts/0xProto-Regular.ttf",
+            "/fonts/0xProto-Bold.ttf",
             "/fonts/0xProtoNL-Regular.ttf",
             "/fonts/0xProtoNL-Bold.ttf",
         ]
 
         with mock.patch("build.shutil.which", return_value="/usr/bin/fontforge"), \
-            mock.patch("build.find_no_ligature_fonts", return_value=source_fonts), \
+            mock.patch("build.find_nerd_font_source_fonts", return_value=source_fonts), \
             mock.patch("build.get_expected_nerd_font_files", return_value=["/out/r.ttf", "/out/b.ttf"]), \
-            mock.patch("build.read_text_file", side_effect=["v3.3.0", "v3.4.0"]), \
+            mock.patch("build.read_text_file", side_effect=["0xProto=2.501; NerdFontsPatcher=v3.4.0", "2.502"]), \
+            mock.patch("build.get_font_patcher_version", return_value="v3.4.0"), \
             mock.patch("build.should_patch_nerd_fonts", return_value=True), \
             mock.patch("build._get_or_download_font_patcher", return_value="/tmp/font-patcher"), \
             mock.patch("build._patch_nerd_fonts_with_patcher", return_value=True) as patch_fonts, \
@@ -754,16 +824,20 @@ class TestFontBuildProcess(unittest.TestCase):
             "/tmp/font-patcher",
             source_fonts,
         )
-        write_text_file.assert_called_once_with(config.NERD_FONT_VERSION_PATH, "v3.4.0")
+        write_text_file.assert_called_once_with(
+            config.NERD_FONT_VERSION_PATH,
+            "0xProto=2.502; NerdFontsPatcher=v3.4.0",
+        )
 
     def test_nerd_font_version_is_not_written_when_any_font_fails(self):
         """패치 명령 중 하나라도 실패하면 source version을 기록하지 않습니다."""
         import build
 
         with mock.patch("build.shutil.which", return_value="/usr/bin/fontforge"), \
-            mock.patch("build.find_no_ligature_fonts", return_value=["/fonts/0xProtoNL-Regular.ttf"]), \
+            mock.patch("build.find_nerd_font_source_fonts", return_value=["/fonts/0xProtoNL-Regular.ttf"]), \
             mock.patch("build.get_expected_nerd_font_files", return_value=["/out/r.ttf"]), \
-            mock.patch("build.read_text_file", side_effect=["v3.3.0", "v3.4.0"]), \
+            mock.patch("build.read_text_file", side_effect=["0xProto=2.501; NerdFontsPatcher=v3.4.0", "2.502"]), \
+            mock.patch("build.get_font_patcher_version", return_value="v3.4.0"), \
             mock.patch("build.should_patch_nerd_fonts", return_value=True), \
             mock.patch("build._get_or_download_font_patcher", return_value="/tmp/font-patcher"), \
             mock.patch("build._patch_nerd_fonts_with_patcher", return_value=False), \
@@ -771,26 +845,6 @@ class TestFontBuildProcess(unittest.TestCase):
             self.assertFalse(build.patch_nerd_fonts())
 
         write_text_file.assert_not_called()
-
-    def test_output_directory_creation(self):
-        """출력 디렉터리 생성 테스트"""
-        print("\n=== 출력 디렉터리 테스트 ===")
-
-        # 임시로 built_fonts 디렉터리 생성 테스트
-        test_output_dir = os.path.join(ASSETS_PATH, "test_built_fonts")
-
-        try:
-            os.makedirs(test_output_dir, exist_ok=True)
-            self.assertTrue(os.path.exists(test_output_dir))
-            print(f"✓ 출력 디렉터리 생성 성공: {test_output_dir}")
-
-            # 정리
-            if os.path.exists(test_output_dir):
-                os.rmdir(test_output_dir)
-                print("✓ 테스트 디렉터리 정리 완료")
-
-        except Exception as e:
-            self.fail(f"출력 디렉터리 생성 테스트 실패: {e}")
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)

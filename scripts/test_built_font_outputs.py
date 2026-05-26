@@ -50,11 +50,22 @@ class TestBuiltFonts(unittest.TestCase):
             if not os.path.isdir(family_path):
                 continue
 
-            for filename in os.listdir(family_path):
-                if filename.lower().endswith(suffixes):
-                    paths.append(os.path.join(family_path, filename))
+            for dirpath, _, filenames in os.walk(family_path):
+                for filename in filenames:
+                    if filename.lower().endswith(suffixes):
+                        paths.append(os.path.join(dirpath, filename))
 
         return sorted(paths)
+
+    def _built_font_relpath(self, font_path):
+        return os.path.relpath(font_path, BUILT_FONTS_PATH)
+
+    def _alias_path(self, zero_x_path):
+        relpath = self._built_font_relpath(zero_x_path)
+        return os.path.join(
+            BUILT_FONTS_PATH,
+            relpath.replace("0xProtoD2", "ZxProtoD2"),
+        )
 
     def _hangul_metric_rows(self, font):
         cmap = self._unicode_cmap(font)
@@ -128,6 +139,19 @@ class TestBuiltFonts(unittest.TestCase):
             }
         )
 
+    def _expected_ttf_relpaths(self):
+        relpaths = set()
+        for family_name in ("0xProtoD2", "ZxProtoD2"):
+            for style in ("Bold", "Italic", "Regular"):
+                relpaths.add(f"{family_name}/{family_name}-{style}.ttf")
+                relpaths.add(f"{family_name}/NL/{family_name}-NL-{style}.ttf")
+                relpaths.add(f"{family_name}/{family_name}-NerdFontMono-{style}.ttf")
+                relpaths.add(
+                    f"{family_name}/NL/{family_name}-NL-NerdFontMono-{style}.ttf"
+                )
+
+        return relpaths
+
     def test_built_fonts_have_expected_hangul_advance_widths(self):
         """모든 산출 폰트의 한글 advance width는 variant별 목표값과 일치합니다."""
         TTFont = self._require_fonttools()
@@ -150,36 +174,24 @@ class TestBuiltFonts(unittest.TestCase):
                     f"{font_path} contains Hangul glyphs outside width {expected_width}",
                 )
 
+    def test_built_ttf_files_include_ligature_and_nl_nerd_mono_variants(self):
+        """Nerd Font Mono는 ligature/NL 조합을 모두 제공합니다."""
+        actual_files = {
+            self._built_font_relpath(path)
+            for path in self._built_font_paths(suffixes=(".ttf",))
+        }
+
+        self.assertEqual(actual_files, self._expected_ttf_relpaths())
+
     def test_ligature_variants_keep_calt_feature(self):
         """한글 병합은 Ligatures variant의 contextual alternates를 제거하지 않습니다."""
         TTFont = self._require_fonttools()
 
-        expected_calt = {
-            "0xProtoD2-Regular.ttf": True,
-            "0xProtoD2-Italic.ttf": True,
-            "0xProtoD2-Bold.ttf": True,
-            "0xProtoD2-NL-Regular.ttf": False,
-            "0xProtoD2-NL-Italic.ttf": False,
-            "0xProtoD2-NL-Bold.ttf": False,
-            "0xProtoD2-NL-NerdFontMono-Regular.ttf": False,
-            "0xProtoD2-NL-NerdFontMono-Italic.ttf": False,
-            "0xProtoD2-NL-NerdFontMono-Bold.ttf": False,
-            "ZxProtoD2-Regular.ttf": True,
-            "ZxProtoD2-Italic.ttf": True,
-            "ZxProtoD2-Bold.ttf": True,
-            "ZxProtoD2-NL-Regular.ttf": False,
-            "ZxProtoD2-NL-Italic.ttf": False,
-            "ZxProtoD2-NL-Bold.ttf": False,
-            "ZxProtoD2-NL-NerdFontMono-Regular.ttf": False,
-            "ZxProtoD2-NL-NerdFontMono-Italic.ttf": False,
-            "ZxProtoD2-NL-NerdFontMono-Bold.ttf": False,
-        }
-
         for font_path in self._built_font_paths(suffixes=(".ttf",)):
-            filename = os.path.basename(font_path)
-            with self.subTest(font=filename):
+            relpath = self._built_font_relpath(font_path)
+            with self.subTest(font=relpath):
                 has_calt = "calt" in self._gsub_feature_tags(TTFont(font_path))
-                self.assertEqual(has_calt, expected_calt[filename])
+                self.assertEqual(has_calt, "/NL/" not in relpath)
 
     def test_built_ttf_unique_ids_are_not_shared_between_font_faces(self):
         """설치 대상 TTF face들은 Unique ID를 서로 공유하지 않습니다."""
@@ -203,7 +215,7 @@ class TestBuiltFonts(unittest.TestCase):
         self.assertEqual(duplicates, [])
 
     def test_built_fonts_use_release_version_metadata(self):
-        """모든 산출 폰트의 version name은 built_fonts/version과 일치합니다."""
+        """모든 산출 폰트의 version name은 repo FONT_VERSION과 일치합니다."""
         TTFont = self._require_fonttools()
 
         with open(BUILT_FONT_VERSION_PATH, encoding="utf-8") as version_file:
@@ -222,19 +234,12 @@ class TestBuiltFonts(unittest.TestCase):
     def test_built_0x_and_zx_aliases_have_identical_hangul_metrics(self):
         """0xProtoD2와 ZxProtoD2 alias 산출물은 family 이름 외 한글 메트릭이 같습니다."""
         TTFont = self._require_fonttools()
-        zero_x_dir = os.path.join(BUILT_FONTS_PATH, "0xProtoD2")
-        zx_dir = os.path.join(BUILT_FONTS_PATH, "ZxProtoD2")
 
         for zero_x_path in self._built_font_paths():
-            if os.path.dirname(zero_x_path) != zero_x_dir:
+            if not self._built_font_relpath(zero_x_path).startswith("0xProtoD2/"):
                 continue
 
-            zx_filename = os.path.basename(zero_x_path).replace(
-                "0xProtoD2",
-                "ZxProtoD2",
-                1,
-            )
-            zx_path = os.path.join(zx_dir, zx_filename)
+            zx_path = self._alias_path(zero_x_path)
 
             with self.subTest(font=os.path.basename(zero_x_path)):
                 self.assertTrue(os.path.exists(zx_path), f"missing alias font: {zx_path}")
@@ -246,19 +251,12 @@ class TestBuiltFonts(unittest.TestCase):
     def test_built_0x_and_zx_aliases_only_differ_by_font_names(self):
         """0xProtoD2와 ZxProtoD2 alias 산출물은 이름 테이블 외 폰트 데이터가 같습니다."""
         TTFont = self._require_fonttools()
-        zero_x_dir = os.path.join(BUILT_FONTS_PATH, "0xProtoD2")
-        zx_dir = os.path.join(BUILT_FONTS_PATH, "ZxProtoD2")
 
         for zero_x_path in self._built_font_paths(suffixes=(".ttf",)):
-            if os.path.dirname(zero_x_path) != zero_x_dir:
+            if not self._built_font_relpath(zero_x_path).startswith("0xProtoD2/"):
                 continue
 
-            zx_filename = os.path.basename(zero_x_path).replace(
-                "0xProtoD2",
-                "ZxProtoD2",
-                1,
-            )
-            zx_path = os.path.join(zx_dir, zx_filename)
+            zx_path = self._alias_path(zero_x_path)
 
             with self.subTest(font=os.path.basename(zero_x_path)):
                 self.assertTrue(os.path.exists(zx_path), f"missing alias font: {zx_path}")
@@ -275,11 +273,19 @@ class TestBuiltFonts(unittest.TestCase):
             ("0xProtoD2-Regular.ttf", "0xProtoD2-Italic.ttf"),
             ("0xProtoD2-NL-Regular.ttf", "0xProtoD2-NL-Italic.ttf"),
             (
+                "0xProtoD2-NerdFontMono-Regular.ttf",
+                "0xProtoD2-NerdFontMono-Italic.ttf",
+            ),
+            (
                 "0xProtoD2-NL-NerdFontMono-Regular.ttf",
                 "0xProtoD2-NL-NerdFontMono-Italic.ttf",
             ),
             ("ZxProtoD2-Regular.ttf", "ZxProtoD2-Italic.ttf"),
             ("ZxProtoD2-NL-Regular.ttf", "ZxProtoD2-NL-Italic.ttf"),
+            (
+                "ZxProtoD2-NerdFontMono-Regular.ttf",
+                "ZxProtoD2-NerdFontMono-Italic.ttf",
+            ),
             (
                 "ZxProtoD2-NL-NerdFontMono-Regular.ttf",
                 "ZxProtoD2-NL-NerdFontMono-Italic.ttf",
@@ -287,7 +293,10 @@ class TestBuiltFonts(unittest.TestCase):
         ]
 
         for regular_name, italic_name in pairs:
-            family_dir = os.path.join(BUILT_FONTS_PATH, regular_name.split("-", 1)[0])
+            family_name = regular_name.split("-", 1)[0]
+            family_dir = os.path.join(BUILT_FONTS_PATH, family_name)
+            if "-NL-" in regular_name:
+                family_dir = os.path.join(family_dir, "NL")
             regular_path = os.path.join(family_dir, regular_name)
             italic_path = os.path.join(family_dir, italic_name)
 

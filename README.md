@@ -17,13 +17,15 @@
 
 [Releases](https://github.com/wudys/0xProtoD2/releases/latest)에서 원하는 패밀리를 내려받아 설치합니다.
 
-| 버전           | 패밀리                        | 제공 파일  | 추천 환경                        |
-| -------------- | ----------------------------- | ---------- | -------------------------------- |
-| 기본           | `0xProtoD2`                   | TTF, WOFF2 | 코드 에디터, IDE                 |
-| No Ligatures   | `0xProtoD2 NL`                | TTF, WOFF2 | ligature를 완전히 끄고 싶은 환경 |
-| Nerd Font Mono | `0xProtoD2 NL Nerd Font Mono` | TTF        | 터미널, Vim/Neovim               |
+| 버전                        | 패밀리                           | 제공 파일  | 추천 환경                                      |
+| --------------------------- | -------------------------------- | ---------- | ---------------------------------------------- |
+| 기본                        | `0xProtoD2`                      | TTF, WOFF2 | 코드 에디터, IDE                               |
+| No Ligatures                | `0xProtoD2 NL`                   | TTF, WOFF2 | ligature를 완전히 끄고 싶은 환경               |
+| Nerd Font Mono              | `0xProtoD2 Nerd Font Mono`       | TTF        | 터미널에서 아이콘과 ligature를 함께 쓰는 환경  |
+| No Ligatures Nerd Font Mono | `0xProtoD2 NL Nerd Font Mono`    | TTF        | 터미널, Vim/Neovim의 안정적인 기본 선택        |
 
 각 버전은 `ZxProtoD2` 호환 패밀리로도 제공합니다. Italic의 한글 글리프는 D2Coding Regular를 바탕으로 하되, Italic 산출물에서는 기울임 보정을 적용합니다.
+릴리스 압축 파일 안에서 `NL` 패밀리는 `NL/` 하위 폴더에 들어갑니다.
 
 ## 빌드
 
@@ -49,6 +51,8 @@ brew install fontforge
 ```
 
 #### 빌드 및 테스트
+
+최종 산출 폰트의 release version 메타데이터는 repo 최상위 `FONT_VERSION` 파일을 사용합니다.
 
 ```bash
 # 소스 폰트 버전 갱신, Nerd Font Mono 패치 확인, 최종 폰트 생성
@@ -82,7 +86,7 @@ python3 scripts/build.py preview
 한글 폭과 외곽선 크기는 `scripts/font_settings.py` 또는 같은 이름의 환경 변수로 조정할 수 있습니다.
 
 기본 패밀리와 `NL` 패밀리는 코드 에디터에서 자연스럽게 보이도록 조정하고,
-`NL Nerd Font Mono` 패밀리는 터미널에서 한글 정렬이 깨지지 않도록 별도 설정을 사용합니다.
+`Nerd Font Mono`와 `NL Nerd Font Mono` 패밀리는 터미널에서 한글 정렬이 깨지지 않도록 별도 설정을 사용합니다.
 
 | 설정                            |  기본값 | 설명                                                             |
 | ------------------------------- | ------: | ---------------------------------------------------------------- |

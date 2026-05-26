@@ -38,22 +38,25 @@ jobs:
               RELEASE_NOTES_PATH,
           )
 
-          required_suffixes = [
-              "Regular.ttf",
-              "Regular.woff2",
-              "Bold.ttf",
-              "Bold.woff2",
-              "Italic.ttf",
-              "Italic.woff2",
-              "NL-Regular.ttf",
-              "NL-Regular.woff2",
-              "NL-Bold.ttf",
-              "NL-Bold.woff2",
-              "NL-Italic.ttf",
-              "NL-Italic.woff2",
-              "NL-NerdFontMono-Regular.ttf",
-              "NL-NerdFontMono-Bold.ttf",
-              "NL-NerdFontMono-Italic.ttf",
+          required_path_templates = [
+              "{family}-Regular.ttf",
+              "{family}-Regular.woff2",
+              "{family}-Bold.ttf",
+              "{family}-Bold.woff2",
+              "{family}-Italic.ttf",
+              "{family}-Italic.woff2",
+              "{family}-NerdFontMono-Regular.ttf",
+              "{family}-NerdFontMono-Bold.ttf",
+              "{family}-NerdFontMono-Italic.ttf",
+              "NL/{family}-NL-Regular.ttf",
+              "NL/{family}-NL-Regular.woff2",
+              "NL/{family}-NL-Bold.ttf",
+              "NL/{family}-NL-Bold.woff2",
+              "NL/{family}-NL-Italic.ttf",
+              "NL/{family}-NL-Italic.woff2",
+              "NL/{family}-NL-NerdFontMono-Regular.ttf",
+              "NL/{family}-NL-NerdFontMono-Bold.ttf",
+              "NL/{family}-NL-NerdFontMono-Italic.ttf",
           ]
 
           built_fonts_dir = Path(BUILT_FONTS_PATH)
@@ -76,12 +79,12 @@ jobs:
               if not family_dir.is_dir():
                   raise SystemExit(f"[ERROR] Missing built font directory: {family_dir}")
 
-              for suffix in required_suffixes:
-                  font_path = family_dir / f"{family_name}-{suffix}"
+              for path_template in required_path_templates:
+                  font_path = family_dir / path_template.format(family=family_name)
                   if not font_path.is_file():
                       raise SystemExit(f"[ERROR] Missing release font: {font_path}")
 
-              nerd_webfonts = list(family_dir.glob("*NerdFontMono*.woff2"))
+              nerd_webfonts = list(family_dir.rglob("*NerdFontMono*.woff2"))
               if nerd_webfonts:
                   raise SystemExit(
                       f"[ERROR] Nerd Font webfonts should not be released: {nerd_webfonts[0]}"
@@ -104,7 +107,7 @@ jobs:
               "- Ligature fonts: TTF and WOFF2",
               "- No-ligature fonts (`NL`): TTF and WOFF2",
               "- Regular, Bold, and Italic styles",
-              "- Nerd Font Mono no-ligature fonts (`NL-NerdFontMono`): TTF only",
+              "- Nerd Font Mono fonts (`NerdFontMono`, `NL-NerdFontMono`): TTF only",
               "",
           ]
           release_notes = "\n".join(release_notes_lines)
