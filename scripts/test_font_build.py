@@ -96,6 +96,64 @@ class TestFontBuildProcess(unittest.TestCase):
             ],
         )
 
+    def test_run_prepare_korean_font_adds_nerd_mono_flag_only_for_variant(self):
+        """Nerd Mono 한글 전처리 명령에만 --nerd-mono를 붙입니다."""
+        import build
+
+        calls = []
+
+        def record_run(command, check):
+            calls.append((command, check))
+            return mock.Mock(returncode=0)
+
+        with mock.patch.object(build.subprocess, "run", record_run):
+            self.assertTrue(
+                build.run_prepare_korean_font(
+                    "fontforge",
+                    "hangulify.py",
+                    "regular",
+                    "/tmp/D2Coding-regular.ttf",
+                )
+            )
+            self.assertTrue(
+                build.run_prepare_korean_font(
+                    "fontforge",
+                    "hangulify.py",
+                    "regular",
+                    "/tmp/D2Coding-regular-nerd-mono.ttf",
+                    is_nerd_font=True,
+                )
+            )
+
+        self.assertEqual(
+            calls,
+            [
+                (
+                    [
+                        "fontforge",
+                        "-script",
+                        "hangulify.py",
+                        "--prepare-ko",
+                        "regular",
+                        "/tmp/D2Coding-regular.ttf",
+                    ],
+                    False,
+                ),
+                (
+                    [
+                        "fontforge",
+                        "-script",
+                        "hangulify.py",
+                        "--prepare-ko",
+                        "regular",
+                        "/tmp/D2Coding-regular-nerd-mono.ttf",
+                        "--nerd-mono",
+                    ],
+                    False,
+                ),
+            ],
+        )
+
     def test_find_font_files_ignores_woff2_sources(self):
         """원본 검색은 TTF/OTF만 사용하고 WOFF2 웹폰트는 입력에서 제외합니다."""
         import tempfile

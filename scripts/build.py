@@ -206,6 +206,24 @@ def patch_nerd_fonts():
     return True
 
 
+def run_prepare_korean_font(
+    fontforge_bin, script_path, weight, output_path, is_nerd_font=False
+):
+    command = [
+        fontforge_bin,
+        "-script",
+        script_path,
+        "--prepare-ko",
+        weight,
+        output_path,
+    ]
+    if is_nerd_font:
+        command.append("--nerd-mono")
+
+    result = subprocess.run(command, check=False)
+    return result.returncode == 0
+
+
 def run_build_fonts():
     """한글 폰트를 weight별로 전처리한 뒤 Regular/Bold 병렬 빌드를 실행합니다."""
     fontforge_bin = shutil.which("fontforge")
@@ -221,25 +239,17 @@ def run_build_fonts():
             nerd_mono_output_path = os.path.join(
                 work_dir, f"D2Coding-{weight}-nerd-mono.ttf"
             )
-            result = subprocess.run(
-                [fontforge_bin, "-script", script_path, "--prepare-ko", weight, output_path],
-                check=False,
-            )
-            if result.returncode != 0:
+            if not run_prepare_korean_font(
+                fontforge_bin, script_path, weight, output_path
+            ):
                 return False
-            nerd_mono_result = subprocess.run(
-                [
-                    fontforge_bin,
-                    "-script",
-                    script_path,
-                    "--prepare-ko",
-                    weight,
-                    nerd_mono_output_path,
-                    "--nerd-mono",
-                ],
-                check=False,
-            )
-            if nerd_mono_result.returncode != 0:
+            if not run_prepare_korean_font(
+                fontforge_bin,
+                script_path,
+                weight,
+                nerd_mono_output_path,
+                is_nerd_font=True,
+            ):
                 return False
             prepared_fonts[weight] = (output_path, nerd_mono_output_path)
 
