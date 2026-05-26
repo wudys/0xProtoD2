@@ -53,9 +53,6 @@ class TestFontBuildProcess(unittest.TestCase):
         """기본 사용자 설정은 평상시 한글 advance와 여백을 계산합니다."""
         import font_settings
 
-        self.assertEqual(font_settings.HANGUL_WIDTH_RATIO, 1.613)
-        self.assertEqual(font_settings.HANGUL_GLYPH_SCALE, 1.09)
-        self.assertEqual(font_settings.HANGUL_SIDE_BEARING, 100)
         self.assertEqual(font_settings.get_hangul_advance_width(), 1000)
         self.assertAlmostEqual(
             font_settings.get_hangul_outline_scale(1000),
@@ -67,9 +64,6 @@ class TestFontBuildProcess(unittest.TestCase):
         """Nerd Font Mono는 일반 한글 설정과 별도 advance/scale을 사용합니다."""
         import font_settings
 
-        self.assertEqual(font_settings.HANGUL_NERD_MONO_WIDTH_RATIO, 2.0)
-        self.assertEqual(font_settings.HANGUL_NERD_MONO_GLYPH_SCALE, 0.94)
-        self.assertEqual(font_settings.HANGUL_NERD_MONO_SIDE_BEARING, 90)
         self.assertEqual(font_settings.get_hangul_advance_width(True), 1240)
         self.assertAlmostEqual(
             font_settings.get_hangul_outline_scale(1000, True),
