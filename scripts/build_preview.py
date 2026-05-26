@@ -147,8 +147,8 @@ def render_readme_preview(output_path: str = README_PREVIEW_IMAGE_PATH) -> bool:
     rule = "#d9c99f"
 
     draw.rectangle((0, 0, 1280, 88), fill=bar)
-    draw.text((54, 31), "0xProtoD2", font=header_font, fill="white")
-    draw.text((258, 27), "\uf121", font=title_icon_font, fill="white")
+    draw.text((54, 28), "0xProtoD2", font=header_font, fill="white")
+    draw.text((258, 24), "\uf121", font=title_icon_font, fill="white")
     draw.text((926, 24), "\uf09b", font=github_icon_font, fill="white")
     draw.text((966, 32), "wudys/0xProtoD2", font=footer_font, fill="white")
 
