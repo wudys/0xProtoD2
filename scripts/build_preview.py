@@ -7,11 +7,7 @@ from PIL import Image, ImageDraw, ImageFont
 from fontTools.ttLib import TTFont
 
 from config import ASSETS_PATH, FONT_FAMILY_OUTPUT_PATHS
-from font_settings import (
-    HANGUL_GLYPH_SCALE,
-    HANGUL_SIDE_BEARING,
-    HANGUL_WIDTH_RATIO,
-)
+from font_settings import get_hangul_settings
 
 
 PREVIEW_PATH = "preview"
@@ -36,15 +32,16 @@ def _metric_for(font_path: str, codepoint: int) -> tuple[int, int]:
 def collect_metrics(font_path: str) -> dict[str, object]:
     zero_advance, zero_lsb = _metric_for(font_path, 0x30)
     hangul_advance, hangul_lsb = _metric_for(font_path, 0xAC00)
+    width_ratio, glyph_scale, side_bearing = get_hangul_settings()
     return {
         "font": font_path,
         "zero": {"advance": zero_advance, "left_side_bearing": zero_lsb},
         "hangul": {"advance": hangul_advance, "left_side_bearing": hangul_lsb},
         "hangul_to_zero_ratio": round(hangul_advance / zero_advance, 4),
         "settings": {
-            "hangul_width_ratio": HANGUL_WIDTH_RATIO,
-            "hangul_glyph_scale": HANGUL_GLYPH_SCALE,
-            "hangul_side_bearing": HANGUL_SIDE_BEARING,
+            "hangul_width_ratio": width_ratio,
+            "hangul_glyph_scale": glyph_scale,
+            "hangul_side_bearing": side_bearing,
         },
     }
 
