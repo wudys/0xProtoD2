@@ -22,9 +22,6 @@ from config import (
     OLD_FONT_NAME,
 )
 from font_settings import (
-    HANGUL_GLYPH_SCALE,
-    HANGUL_SIDE_BEARING,
-    HANGUL_WIDTH_RATIO,
     get_hangul_advance_width,
     get_hangul_outline_scale,
 )
@@ -82,11 +79,11 @@ def format_postscript_family_name(family_name: str) -> str:
     )
 
 
-def fit_hangul_glyph(glyph: Any) -> Any:
+def fit_hangul_glyph(glyph: Any, is_nerd_font: bool = False) -> Any:
     """한글 글리프를 설정된 고정폭 셀 안에 맞춥니다."""
     source_width = int(glyph.width)
-    target_width = get_hangul_advance_width()
-    scale = get_hangul_outline_scale(source_width)
+    target_width = get_hangul_advance_width(is_nerd_font)
+    scale = get_hangul_outline_scale(source_width, is_nerd_font)
     x_offset = (target_width - (source_width * scale)) / 2
 
     glyph.transform((scale, 0, 0, scale, x_offset, 0))
@@ -94,24 +91,28 @@ def fit_hangul_glyph(glyph: Any) -> Any:
     return glyph
 
 
-def _process_and_adjust_glyph(font: fontforge.font, glyph_id: int) -> None:
+def _process_and_adjust_glyph(
+    font: fontforge.font, glyph_id: int, is_nerd_font: bool = False
+) -> None:
     """
     단일 글리프 또는 참조 글리프의 베어링을 조정합니다.
     """
     glyph = font[glyph_id]
 
     if not glyph.references:
-        fit_hangul_glyph(glyph)
+        fit_hangul_glyph(glyph, is_nerd_font)
     else:
-        fit_hangul_glyph(glyph)
+        fit_hangul_glyph(glyph, is_nerd_font)
 
 
-def process_hangul_glyphs(font: fontforge.font) -> fontforge.font:
+def process_hangul_glyphs(
+    font: fontforge.font, is_nerd_font: bool = False
+) -> fontforge.font:
     """한글 글리프를 선택하고 베어링을 조정합니다."""
     for start, end in HANGUL_RANGES:
         for glyph_id in range(start, end + 1):
             if glyph_id in font:
-                _process_and_adjust_glyph(font, glyph_id)
+                _process_and_adjust_glyph(font, glyph_id, is_nerd_font)
 
     print("[INFO] 한글 글리프 폭/외곽선 보정을 완료했습니다.")
     return font
@@ -364,7 +365,7 @@ def find_font_files(directory: str, weight: str = None) -> list:
     
     font_files = []
     for filename in os.listdir(directory):
-        if filename.lower().endswith((".ttf", ".otf", ".woff2")):
+        if filename.lower().endswith((".ttf", ".otf")):
             if weight is None:
                 font_files.append(os.path.join(directory, filename))
             elif weight.lower() in filename.lower():
@@ -416,14 +417,16 @@ def _process_font_variant(
         print(f"[ERROR] {style} 폰트 처리 중 오류 발생: {e}")
 
 
-def prepare_korean_font(weight: str, output_path: str) -> bool:
+def prepare_korean_font(
+    weight: str, output_path: str, is_nerd_font: bool = False
+) -> bool:
     ko_files = find_font_files(KO_FONT_PATH, weight)
     if not ko_files:
         print(f"[ERROR] {weight}용 한글 폰트 파일을 찾을 수 없습니다.")
         return False
 
     ko_font = fontforge.open(ko_files[0])
-    process_hangul_glyphs(ko_font)
+    process_hangul_glyphs(ko_font, is_nerd_font)
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     ko_font.generate(output_path)
     ko_font.close()
@@ -432,14 +435,22 @@ def prepare_korean_font(weight: str, output_path: str) -> bool:
 
 
 def build_weight(weight: str, ko_font_path: str) -> None:
+    build_weight_with_variants(weight, ko_font_path, ko_font_path)
+
+
+def build_weight_with_variants(
+    weight: str, ko_font_path: str, nerd_mono_ko_font_path: str
+) -> None:
     variants = [
-        ("Ligatures", EN_FONT_PATH, False),
-        ("No-Ligatures", NO_LIGATURE_FONT_PATH, False),
-        ("NerdFontMono", EN_NERD_FONT_PATH, True),
+        ("Ligatures", EN_FONT_PATH, False, ko_font_path),
+        ("No-Ligatures", NO_LIGATURE_FONT_PATH, False, ko_font_path),
+        ("NerdFontMono", EN_NERD_FONT_PATH, True, nerd_mono_ko_font_path),
     ]
 
-    for label, en_font_path, is_nerd_font in variants:
-        _process_font_variant(label, en_font_path, is_nerd_font, weight, ko_font_path)
+    for label, en_font_path, is_nerd_font, variant_ko_font_path in variants:
+        _process_font_variant(
+            label, en_font_path, is_nerd_font, weight, variant_ko_font_path
+        )
 
 
 def build_fonts() -> None:
@@ -453,18 +464,27 @@ def build_fonts() -> None:
     with tempfile.TemporaryDirectory() as work_dir:
         for weight in ("regular", "bold"):
             ko_cache_path = os.path.join(work_dir, f"D2Coding-{weight}.ttf")
-            if prepare_korean_font(weight, ko_cache_path):
-                build_weight(weight, ko_cache_path)
+            nerd_mono_ko_cache_path = os.path.join(
+                work_dir, f"D2Coding-{weight}-nerd-mono.ttf"
+            )
+            if prepare_korean_font(weight, ko_cache_path) and prepare_korean_font(
+                weight, nerd_mono_ko_cache_path, is_nerd_font=True
+            ):
+                build_weight_with_variants(
+                    weight, ko_cache_path, nerd_mono_ko_cache_path
+                )
 
 
 def main() -> int:
     _require_fontforge()
 
-    if len(sys.argv) == 4 and sys.argv[1] == "--prepare-ko":
-        return 0 if prepare_korean_font(sys.argv[2], sys.argv[3]) else 1
+    if len(sys.argv) in (4, 5) and sys.argv[1] == "--prepare-ko":
+        is_nerd_font = len(sys.argv) == 5 and sys.argv[4] == "--nerd-mono"
+        return 0 if prepare_korean_font(sys.argv[2], sys.argv[3], is_nerd_font) else 1
 
-    if len(sys.argv) == 4 and sys.argv[1] == "--worker":
-        build_weight(sys.argv[2], sys.argv[3])
+    if len(sys.argv) in (4, 5) and sys.argv[1] == "--worker":
+        nerd_mono_ko_font_path = sys.argv[4] if len(sys.argv) == 5 else sys.argv[3]
+        build_weight_with_variants(sys.argv[2], sys.argv[3], nerd_mono_ko_font_path)
         return 0
 
     build_fonts()

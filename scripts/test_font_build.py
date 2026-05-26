@@ -45,23 +45,75 @@ class TestFontBuildProcess(unittest.TestCase):
         glyph = FakeGlyph()
         _process_and_adjust_glyph({0xAC00: glyph}, 0xAC00)
 
-        self.assertEqual(glyph.width, 1240)
+        self.assertEqual(glyph.width, 1000)
         self.assertEqual(len(glyph.transforms), 1)
-        self.assertAlmostEqual(glyph.transforms[0][0], 1.0944, places=4)
+        self.assertAlmostEqual(glyph.transforms[0][0], 0.981, places=4)
 
     def test_user_facing_hangul_settings_compute_fixed_2_cell_width(self):
-        """기본 사용자 설정은 한글 advance를 영문 2칸으로 계산합니다."""
+        """기본 사용자 설정은 평상시 한글 advance와 여백을 계산합니다."""
         import font_settings
 
-        self.assertEqual(font_settings.HANGUL_WIDTH_RATIO, 2.0)
-        self.assertEqual(font_settings.HANGUL_GLYPH_SCALE, 0.96)
+        self.assertEqual(font_settings.HANGUL_WIDTH_RATIO, 1.613)
+        self.assertEqual(font_settings.HANGUL_GLYPH_SCALE, 1.09)
         self.assertEqual(font_settings.HANGUL_SIDE_BEARING, 100)
-        self.assertEqual(font_settings.get_hangul_advance_width(), 1240)
+        self.assertEqual(font_settings.get_hangul_advance_width(), 1000)
         self.assertAlmostEqual(
             font_settings.get_hangul_outline_scale(1000),
-            1.0944,
+            0.981,
             places=4,
         )
+
+    def test_nerd_mono_hangul_settings_use_separate_balance(self):
+        """Nerd Font Mono는 일반 한글 설정과 별도 advance/scale을 사용합니다."""
+        import font_settings
+
+        self.assertEqual(font_settings.HANGUL_NERD_MONO_WIDTH_RATIO, 2.0)
+        self.assertEqual(font_settings.HANGUL_NERD_MONO_GLYPH_SCALE, 0.94)
+        self.assertEqual(font_settings.HANGUL_NERD_MONO_SIDE_BEARING, 90)
+        self.assertEqual(font_settings.get_hangul_advance_width(True), 1240)
+        self.assertAlmostEqual(
+            font_settings.get_hangul_outline_scale(1000, True),
+            1.081,
+            places=4,
+        )
+
+    def test_nerd_mono_variant_uses_separate_prepared_korean_font(self):
+        """Nerd Font Mono variant만 별도 전처리 한글 폰트를 사용합니다."""
+        import hangulify
+
+        calls = []
+
+        def record_variant(label, en_font_path, is_nerd_font, weight, ko_font_path):
+            calls.append((label, is_nerd_font, ko_font_path))
+
+        with mock.patch.object(hangulify, "_process_font_variant", record_variant):
+            hangulify.build_weight_with_variants(
+                "regular",
+                "/tmp/D2Coding-regular.ttf",
+                "/tmp/D2Coding-regular-nerd-mono.ttf",
+            )
+
+        self.assertEqual(
+            calls,
+            [
+                ("Ligatures", False, "/tmp/D2Coding-regular.ttf"),
+                ("No-Ligatures", False, "/tmp/D2Coding-regular.ttf"),
+                ("NerdFontMono", True, "/tmp/D2Coding-regular-nerd-mono.ttf"),
+            ],
+        )
+
+    def test_find_font_files_ignores_woff2_sources(self):
+        """원본 검색은 TTF/OTF만 사용하고 WOFF2 웹폰트는 입력에서 제외합니다."""
+        import tempfile
+        from hangulify import find_font_files
+
+        with tempfile.TemporaryDirectory() as font_dir:
+            ttf_path = os.path.join(font_dir, "Example-Regular.ttf")
+            woff2_path = os.path.join(font_dir, "Example-Regular.woff2")
+            open(ttf_path, "w").close()
+            open(woff2_path, "w").close()
+
+            self.assertEqual(find_font_files(font_dir), [ttf_path])
 
     def test_preview_paths_are_under_assets_preview(self):
         """사용자 미리보기 산출물은 루트 preview 디렉터리에 모읍니다."""
@@ -84,7 +136,7 @@ class TestFontBuildProcess(unittest.TestCase):
     def test_directory_structure(self):
         """필요한 디렉터리 구조가 존재하는지 테스트"""
         print("\n=== 디렉터리 구조 테스트 ===")
-        
+
         # 필수 디렉터리들
         required_dirs = {
             "Assets": ASSETS_PATH,
@@ -92,10 +144,10 @@ class TestFontBuildProcess(unittest.TestCase):
             "Korean Font": KO_FONT_PATH,
             "Nerd Font": EN_NERD_FONT_PATH
         }
-        
+
         for name, path in required_dirs.items():
             with self.subTest(directory=name):
-                self.assertTrue(os.path.exists(path), 
+                self.assertTrue(os.path.exists(path),
                     f"{name} 디렉터리가 존재하지 않습니다: {path}")
                 print(f"✓ {name} 디렉터리 확인: {path}")
 
@@ -160,17 +212,17 @@ class TestFontBuildProcess(unittest.TestCase):
     def test_font_files_existence(self):
         """각 디렉터리에 폰트 파일이 존재하는지 테스트"""
         print("\n=== 폰트 파일 존재 테스트 ===")
-        
+
         font_dirs = {
             "English Font": EN_FONT_PATH,
             "Korean Font": KO_FONT_PATH,
         }
-        
+
         for name, path in font_dirs.items():
             with self.subTest(directory=name):
                 if os.path.exists(path):
                     ttf_files = [f for f in os.listdir(path) if f.lower().endswith('.ttf')]
-                    self.assertGreater(len(ttf_files), 0, 
+                    self.assertGreater(len(ttf_files), 0,
                         f"{name} 디렉터리에 TTF 파일이 없습니다: {path}")
                     print(f"✓ {name}: {len(ttf_files)}개 TTF 파일 발견")
                     for ttf_file in ttf_files:
@@ -179,19 +231,19 @@ class TestFontBuildProcess(unittest.TestCase):
     def test_font_weights(self):
         """Regular와 Bold 폰트가 각 디렉터리에 있는지 테스트"""
         print("\n=== 폰트 웨이트 테스트 ===")
-        
+
         font_dirs = {
             "English Font": EN_FONT_PATH,
             "Korean Font": KO_FONT_PATH,
         }
-        
+
         expected_weights = ['regular', 'bold']
-        
+
         for name, path in font_dirs.items():
             with self.subTest(directory=name):
                 if os.path.exists(path):
                     ttf_files = [f.lower() for f in os.listdir(path) if f.lower().endswith('.ttf')]
-                    
+
                     for weight in expected_weights:
                         weight_files = [f for f in ttf_files if weight in f]
                         if weight_files:
@@ -202,17 +254,17 @@ class TestFontBuildProcess(unittest.TestCase):
     def test_fontforge_import(self):
         """FontForge 모듈 임포트 테스트"""
         print("\n=== FontForge 모듈 테스트 ===")
-        
+
         try:
             import fontforge
             print("✓ FontForge 모듈 임포트 성공")
-            
+
             # 간단한 폰트 생성 테스트
             test_font = fontforge.font()
             test_font.fontname = "TestFont"
             print("✓ FontForge 폰트 객체 생성 성공")
             test_font.close()
-            
+
         except ImportError as e:
             self.skipTest(f"FontForge Python 모듈이 없어 건너뜁니다: {e}")
         except Exception as e:
@@ -221,13 +273,13 @@ class TestFontBuildProcess(unittest.TestCase):
     def test_font_loading(self):
         """실제 폰트 파일 로딩 테스트"""
         print("\n=== 폰트 파일 로딩 테스트 ===")
-        
+
         try:
             import fontforge
-            
+
             font_dirs = [EN_FONT_PATH, KO_FONT_PATH, EN_NERD_FONT_PATH]
             dir_names = ["English Font", "Korean Font", "Nerd Font"]
-            
+
             for i, (name, path) in enumerate(zip(dir_names, font_dirs)):
                 with self.subTest(directory=name):
                     if os.path.exists(path):
@@ -245,14 +297,14 @@ class TestFontBuildProcess(unittest.TestCase):
                                 self.fail(f"{name} 폰트 로드 실패 ({ttf_files[0]}): {e}")
                         else:
                             print(f"⚠ {name}: 테스트할 TTF 파일이 없습니다")
-                            
+
         except ImportError:
             self.skipTest("FontForge 모듈이 없어 폰트 로딩 테스트를 건너뜁니다")
 
     def test_hangulify_imports(self):
         """hangulify 모듈의 함수들이 제대로 임포트되는지 테스트"""
         print("\n=== Hangulify 모듈 테스트 ===")
-        
+
         try:
             from hangulify import (
                 find_font_files,
@@ -260,13 +312,13 @@ class TestFontBuildProcess(unittest.TestCase):
                 process_font_file
             )
             print("✓ hangulify 모듈 함수들 임포트 성공")
-            
+
             # find_font_files 함수 테스트
             if os.path.exists(EN_FONT_PATH):
                 regular_files = find_font_files(EN_FONT_PATH, "regular")
                 bold_files = find_font_files(EN_FONT_PATH, "bold")
                 print(f"✓ find_font_files 테스트 성공 (Regular: {len(regular_files)}, Bold: {len(bold_files)})")
-            
+
         except ImportError as e:
             self.fail(f"hangulify 모듈 임포트 실패: {e}")
         except Exception as e:
@@ -460,20 +512,20 @@ class TestFontBuildProcess(unittest.TestCase):
     def test_output_directory_creation(self):
         """출력 디렉터리 생성 테스트"""
         print("\n=== 출력 디렉터리 테스트 ===")
-        
+
         # 임시로 built_fonts 디렉터리 생성 테스트
         test_output_dir = os.path.join(ASSETS_PATH, "test_built_fonts")
-        
+
         try:
             os.makedirs(test_output_dir, exist_ok=True)
             self.assertTrue(os.path.exists(test_output_dir))
             print(f"✓ 출력 디렉터리 생성 성공: {test_output_dir}")
-            
+
             # 정리
             if os.path.exists(test_output_dir):
                 os.rmdir(test_output_dir)
                 print("✓ 테스트 디렉터리 정리 완료")
-                
+
         except Exception as e:
             self.fail(f"출력 디렉터리 생성 테스트 실패: {e}")
 
@@ -483,13 +535,13 @@ def run_detailed_analysis():
     print("\n" + "="*60)
     print("상세 폰트 분석")
     print("="*60)
-    
+
     font_dirs = {
         "English Font": EN_FONT_PATH,
         "Korean Font": KO_FONT_PATH,
         "Nerd Font": EN_NERD_FONT_PATH
     }
-    
+
     for name, path in font_dirs.items():
         print(f"\n--- {name} ---")
         if os.path.exists(path):
@@ -506,18 +558,18 @@ def run_detailed_analysis():
 if __name__ == '__main__':
     print("0xProtoD2 폰트 빌드 테스트 시작")
     print("="*60)
-    
+
     # 상세 분석 실행
     run_detailed_analysis()
-    
+
     # 유닛 테스트 실행
     print("\n" + "="*60)
     print("유닛 테스트 실행")
     print("="*60)
-    
+
     # verbosity=2로 설정하여 자세한 테스트 결과 출력
     unittest.main(verbosity=2, exit=False)
-    
+
     print("\n" + "="*60)
     print("테스트 완료!")
     print("="*60)

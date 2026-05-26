@@ -220,19 +220,44 @@ def run_build_fonts():
         prepared_fonts = {}
         for weight in ("regular", "bold"):
             output_path = os.path.join(work_dir, f"D2Coding-{weight}.ttf")
+            nerd_mono_output_path = os.path.join(
+                work_dir, f"D2Coding-{weight}-nerd-mono.ttf"
+            )
             result = subprocess.run(
                 [fontforge_bin, "-script", script_path, "--prepare-ko", weight, output_path],
                 check=False,
             )
             if result.returncode != 0:
                 return False
-            prepared_fonts[weight] = output_path
+            nerd_mono_result = subprocess.run(
+                [
+                    fontforge_bin,
+                    "-script",
+                    script_path,
+                    "--prepare-ko",
+                    weight,
+                    nerd_mono_output_path,
+                    "--nerd-mono",
+                ],
+                check=False,
+            )
+            if nerd_mono_result.returncode != 0:
+                return False
+            prepared_fonts[weight] = (output_path, nerd_mono_output_path)
 
         processes = [
             subprocess.Popen(
-                [fontforge_bin, "-script", script_path, "--worker", weight, ko_font_path]
+                [
+                    fontforge_bin,
+                    "-script",
+                    script_path,
+                    "--worker",
+                    weight,
+                    ko_font_path,
+                    nerd_mono_ko_font_path,
+                ]
             )
-            for weight, ko_font_path in prepared_fonts.items()
+            for weight, (ko_font_path, nerd_mono_ko_font_path) in prepared_fonts.items()
         ]
         return_codes = [process.wait() for process in processes]
         return all(return_code == 0 for return_code in return_codes)

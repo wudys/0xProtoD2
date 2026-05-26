@@ -76,12 +76,17 @@ python3 scripts/test_font_build.py
 ## 커스텀 설정
 
 한글 폭과 외곽선 크기는 `scripts/font_settings.py`에서 조정할 수 있습니다.
+기본 버전과 `NL` 버전은 코드 에디터에서 D2Coding fallback을 함께 쓰는 느낌에 맞추고,
+`NL-NerdFontMono` 버전은 터미널의 2칸 한글 셀을 유지하도록 별도 설정을 사용합니다.
 
-| 설정                  | 기본값 | 설명                                                     |
-| --------------------- | -----: | -------------------------------------------------------- |
-| `HANGUL_WIDTH_RATIO`  |  `2.0` | 한글 advance width를 영문 폭의 몇 배로 둘지 정합니다.    |
-| `HANGUL_GLYPH_SCALE`  | `0.96` | advance width는 유지한 채 한글 외곽선 크기만 조정합니다. |
-| `HANGUL_SIDE_BEARING` |  `100` | 한글 셀 안쪽 좌우 여백을 조정합니다.                     |
+| 설정                  | 기본값                 | 설명                                                     |
+| --------------------- | ---------------------: | -------------------------------------------------------- |
+| `HANGUL_WIDTH_RATIO`  | `1.613`                | 기본/NL 한글 advance width를 영문 폭의 몇 배로 둘지 정합니다. |
+| `HANGUL_GLYPH_SCALE`  | `1.09`                 | 기본/NL advance width는 유지한 채 한글 외곽선 크기만 조정합니다. |
+| `HANGUL_SIDE_BEARING` | `100`                  | 기본/NL 한글 셀 안쪽 좌우 여백을 조정합니다.             |
+| `HANGUL_NERD_MONO_WIDTH_RATIO`  | `2.0`        | Nerd Font Mono 한글 advance width를 영문 2칸으로 맞춥니다. |
+| `HANGUL_NERD_MONO_GLYPH_SCALE`  | `0.94`       | Nerd Font Mono 한글 외곽선 크기를 조정합니다.             |
+| `HANGUL_NERD_MONO_SIDE_BEARING` | `90`         | Nerd Font Mono 한글 셀 안쪽 좌우 여백을 조정합니다.       |
 
 ## FAQ
 
