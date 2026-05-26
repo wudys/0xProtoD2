@@ -1,8 +1,10 @@
 # 0xProtoD2
 
-![0xProtoD2 preview](assets/preview.png)
+0xProtoD2는 영문 코드와 한글 주석, 문서를 한 패밀리 안에서 균형 있게 표시하기 위한 프로그래밍 글꼴입니다.
 
-0xProtoD2는 영문 코드와 한글 주석, 문서를 한 패밀리 안에서 균형 있게 표시하기 위한 프로그래밍 글꼴입니다. 대체 폰트나 보조 폰트를 지정하기 어려운 환경에서도 [0xProto](https://github.com/0xType/0xProto)의 코드 가독성과 [D2Coding](https://github.com/naver/d2codingfont)의 한글 프로그래밍 글꼴 경험을 함께 사용할 수 있도록 맞췄습니다.
+대체 폰트나 보조 폰트를 지정하기 어려운 환경에서도 [0xProto](https://github.com/0xType/0xProto)의 코드 가독성과 [D2Coding](https://github.com/naver/d2codingfont)의 한글 프로그래밍 글꼴 경험을 함께 사용할 수 있도록 맞췄습니다.
+
+![0xProtoD2 preview](assets/preview.png)
 
 ## 특징
 
@@ -71,13 +73,15 @@ python3 scripts/build.py preview
 ```
 
 `preview/balance-comparison.png`에는 현재 설정값과 D2Coding/0xProtoD2 렌더링 비교가 함께 표시됩니다.
+
 `preview/metrics.json`에는 실제 advance width 측정값이 저장됩니다.
 
 ## 커스텀 설정
 
 한글 폭과 외곽선 크기는 `scripts/font_settings.py` 또는 같은 이름의 환경 변수로 조정할 수 있습니다.
-기본 패밀리와 `NL` 패밀리는 코드 에디터에서 D2Coding fallback을 함께 쓰는 느낌에 맞추고,
-`NL Nerd Font Mono` 패밀리는 터미널의 2칸 한글 셀을 유지하도록 별도 설정을 사용합니다.
+
+기본 패밀리와 `NL` 패밀리는 코드 에디터에서 자연스럽게 보이도록 조정하고,
+`NL Nerd Font Mono` 패밀리는 터미널에서 한글 정렬이 깨지지 않도록 별도 설정을 사용합니다.
 
 | 설정                            |  기본값 | 설명                                                             |
 | ------------------------------- | ------: | ---------------------------------------------------------------- |
@@ -92,7 +96,9 @@ python3 scripts/build.py preview
 
 ### 폰트 이름이 왜 두 개인가요?
 
-`0xProtoD2`와 `ZxProtoD2`는 같은 글리프를 가진 같은 폰트입니다. `0xProto` 이름은 OpenType 표준상 문제가 없지만, 일부 애플리케이션/플랫폼 호환성을 위해 `ZxProtoD2`도 함께 제공합니다. [관련 내용](https://github.com/0xType/0xProto/pull/112)
+`0xProtoD2`와 `ZxProtoD2`는 같은 글리프를 가진 같은 폰트입니다. [<관련 내용>](https://github.com/0xType/0xProto/pull/112)
+
+`0xProtoD2` 이름은 OpenType 표준상 문제가 없지만, 일부 애플리케이션/플랫폼 호환성을 위해 `ZxProtoD2`도 함께 제공합니다.
 
 ## 라이선스
 
