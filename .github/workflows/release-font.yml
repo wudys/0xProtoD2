@@ -5,6 +5,9 @@ on:
     tags:
       - "v*.*.*"
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -26,6 +29,7 @@ jobs:
           sys.path.insert(0, "scripts")
           from config import (
               BUILT_FONTS_PATH,
+              BUILT_FONT_VERSION_PATH,
               EN_FONT_VERSION_PATH,
               FONT_FAMILY_ALIASES,
               KO_FONT_VERSION_PATH,
@@ -39,15 +43,30 @@ jobs:
               "Regular.woff2",
               "Bold.ttf",
               "Bold.woff2",
+              "Italic.ttf",
+              "Italic.woff2",
               "NL-Regular.ttf",
               "NL-Regular.woff2",
               "NL-Bold.ttf",
               "NL-Bold.woff2",
+              "NL-Italic.ttf",
+              "NL-Italic.woff2",
               "NL-NerdFontMono-Regular.ttf",
               "NL-NerdFontMono-Bold.ttf",
+              "NL-NerdFontMono-Italic.ttf",
           ]
 
           built_fonts_dir = Path(BUILT_FONTS_PATH)
+          release_version = os.environ["GITHUB_REF_NAME"].removeprefix("v")
+          built_font_version_path = Path(BUILT_FONT_VERSION_PATH)
+          if not built_font_version_path.is_file():
+              raise SystemExit(f"[ERROR] Missing built font version: {built_font_version_path}")
+          built_font_version = built_font_version_path.read_text(encoding="utf-8").strip()
+          if built_font_version != release_version:
+              raise SystemExit(
+                  f"[ERROR] Built font version {built_font_version} does not match release {release_version}"
+              )
+
           release_dir = Path(RELEASE_FILES_PATH)
           shutil.rmtree(release_dir, ignore_errors=True)
           release_dir.mkdir(parents=True, exist_ok=True)
@@ -86,6 +105,7 @@ jobs:
               "## Each archive contains",
               "- Ligature fonts: TTF and WOFF2",
               "- No-ligature fonts (`NL`): TTF and WOFF2",
+              "- Regular, Bold, and Italic styles",
               "- Nerd Font Mono no-ligature fonts (`NL-NerdFontMono`): TTF only",
               "",
           ]
