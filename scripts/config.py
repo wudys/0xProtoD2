@@ -21,6 +21,23 @@ FONT_FAMILY_OUTPUT_PATHS: dict[str, str] = {
 }
 
 
+def get_family_aliases(family_names=None) -> tuple[str, ...]:
+    if family_names is None:
+        return tuple(FONT_FAMILY_ALIASES)
+
+    requested = (family_names,) if isinstance(family_names, str) else tuple(family_names)
+    unknown = [
+        family_name
+        for family_name in requested
+        if family_name not in FONT_FAMILY_ALIASES
+    ]
+    if unknown:
+        allowed = ", ".join(FONT_FAMILY_ALIASES)
+        raise ValueError(f"Unknown family '{unknown[0]}'. Allowed values: {allowed}")
+
+    return requested
+
+
 def get_release_archive_name(family_name: str, version: str) -> str:
     return f"{family_name}-fonts-{version}.zip"
 

@@ -13,8 +13,10 @@ from config import (
     EN_FONT_VERSION_PATH,
     KO_FONT_PATH,
     EN_NERD_FONT_PATH,
+    FONT_FAMILY_ALIASES,
     FONT_PATCHER_CACHE_PATH,
     FONT_PATCHER_URL,
+    get_family_aliases,
     get_prepared_korean_font_paths,
     get_prepared_korean_font_plan,
     NERD_FONT_VERSION_PATH,
@@ -26,12 +28,22 @@ def print_usage():
     """사용법 안내 메시지를 출력합니다."""
     print(f"python {sys.argv[0]} <subcommand>\n")
     print("subcommand:")
-    print("    build        : assets 디렉터리의 폰트를 병합하고 출력합니다.")
+    print("    build [--family FAMILY] : assets 디렉터리의 폰트를 병합하고 출력합니다.")
     print("    preview      : 빌드된 폰트의 HTML/PNG 미리보기를 생성합니다.")
     print("    test         : 폰트 빌드 환경을 테스트합니다.")
     print("    test:logic   : 빌드 로직과 스크립트 단위 테스트를 실행합니다.")
     print("    test:outputs : 빌드 산출 폰트 파일을 검증합니다.")
     print("    clean        : 출력 파일을 삭제합니다.")
+    print(f"\nfamily values: {', '.join(FONT_FAMILY_ALIASES)}")
+
+
+def parse_family_option(args):
+    if not args:
+        return get_family_aliases()
+    if len(args) == 2 and args[0] == "--family":
+        return get_family_aliases(args[1])
+
+    raise ValueError("Usage: build [--family FAMILY]")
 
 
 def check_font_directories():
@@ -283,8 +295,9 @@ def run_prepare_korean_font(
     return result.returncode == 0
 
 
-def run_build_fonts():
+def run_build_fonts(family_aliases=None):
     """한글 폰트를 weight별로 전처리한 뒤 Regular/Bold 병렬 빌드를 실행합니다."""
+    family_aliases = get_family_aliases(family_aliases)
     fontforge_bin = shutil.which("fontforge")
     if not fontforge_bin:
         print("[ERROR] fontforge 실행 파일을 찾을 수 없습니다.")
@@ -310,22 +323,23 @@ def run_build_fonts():
             ):
                 return False
 
-        processes = [
-            subprocess.Popen(
-                [
-                    fontforge_bin,
-                    "-script",
-                    script_path,
-                    "--worker",
-                    weight,
-                    ko_font_path,
-                    nerd_mono_ko_font_path,
-                ]
-            )
-            for weight, (ko_font_path, nerd_mono_ko_font_path) in get_prepared_korean_font_plan(
-                work_dir
-            ).items()
-        ]
+        processes = []
+        for weight, (ko_font_path, nerd_mono_ko_font_path) in get_prepared_korean_font_plan(
+            work_dir
+        ).items():
+            command = [
+                fontforge_bin,
+                "-script",
+                script_path,
+                "--worker",
+                weight,
+                ko_font_path,
+                nerd_mono_ko_font_path,
+            ]
+            if len(family_aliases) == 1:
+                command.extend(["--family", family_aliases[0]])
+            processes.append(subprocess.Popen(command))
+
         return_codes = [process.wait() for process in processes]
         return all(return_code == 0 for return_code in return_codes)
 
@@ -411,6 +425,13 @@ def main():
     subcommand = sys.argv[1]
 
     if subcommand == "build":
+        try:
+            family_aliases = parse_family_option(sys.argv[2:])
+        except ValueError as e:
+            print(f"[ERROR] {e}")
+            print_usage()
+            exit(1)
+
         print("[INFO] 폰트 버전 파일 갱신 중")
         if not refresh_source_font_versions():
             exit(1)
@@ -420,7 +441,7 @@ def main():
         print("[INFO] 폰트 디렉터리 확인 중")
         if check_font_directories():
             print("[INFO] 폰트 빌드 시작")
-            if not run_build_fonts():
+            if not run_build_fonts(family_aliases):
                 exit(1)
         else:
             print("[ERROR] 폰트 빌드에 필요한 파일이 준비되지 않았습니다.")

@@ -18,8 +18,8 @@ from config import (
     EN_FONT_PATH,
     KO_FONT_PATH,
     EN_NERD_FONT_PATH,
-    FONT_FAMILY_ALIASES,
     FONT_FAMILY_OUTPUT_PATHS,
+    get_family_aliases,
     get_prepared_korean_font_paths,
     get_prepared_korean_font_plan,
     NO_LIGATURE_FONT_PATH,
@@ -374,6 +374,7 @@ def process_font_file(
     is_nerd_font: bool,
     font_filename: str,
     output_dir: str,
+    family_aliases=None,
 ) -> bool:
     """
     단일 폰트 파일을 처리하여 한글 글리프를 병합하고 메타데이터를 업데이트합니다.
@@ -391,7 +392,7 @@ def process_font_file(
     base_family_name = en_font.familyname
     success = True
 
-    for family_alias in FONT_FAMILY_ALIASES:
+    for family_alias in get_family_aliases(family_aliases):
         update_font_metadata(
             en_font,
             style,
@@ -455,6 +456,7 @@ def _process_font_variant(
     weight: str,
     ko_font_path: str,
     name_part: str = None,
+    family_aliases=None,
 ) -> bool:
     en_files = find_font_files(en_font_path, weight, name_part)
     style = f"{label}-{weight.capitalize()}"
@@ -481,6 +483,7 @@ def _process_font_variant(
             is_nerd_font,
             os.path.basename(en_font_file_path),
             BUILT_FONTS_PATH,
+            family_aliases,
         )
 
     except Exception as e:
@@ -512,7 +515,10 @@ def prepare_korean_font(
 
 
 def build_weight_with_variants(
-    weight: str, ko_font_path: str, nerd_mono_ko_font_path: str
+    weight: str,
+    ko_font_path: str,
+    nerd_mono_ko_font_path: str,
+    family_aliases=None,
 ) -> bool:
     variants = [
         ("Ligatures", EN_FONT_PATH, False, ko_font_path, None),
@@ -542,13 +548,14 @@ def build_weight_with_variants(
             weight,
             variant_ko_font_path,
             name_part,
+            family_aliases,
         ):
             success = False
 
     return success
 
 
-def build_fonts() -> bool:
+def build_fonts(family_aliases=None) -> bool:
     """
     메인 폰트 빌드 프로세스입니다.
     새로운 디렉터리 구조에서 Regular, Bold, Italic 폰트를 로드하고 병합합니다.
@@ -579,11 +586,37 @@ def build_fonts() -> bool:
             prepared_weights,
         ).items():
             if not build_weight_with_variants(
-                weight, ko_cache_path, nerd_mono_ko_cache_path
+                weight, ko_cache_path, nerd_mono_ko_cache_path, family_aliases
             ):
                 success = False
 
         return success
+
+
+def parse_worker_args(args):
+    if len(args) < 2:
+        raise ValueError(
+            "Usage: --worker WEIGHT KO_FONT [NERD_KO_FONT] [--family FAMILY]"
+        )
+
+    weight = args[0]
+    ko_font_path = args[1]
+    nerd_mono_ko_font_path = ko_font_path
+    family_name = None
+    rest = args[2:]
+
+    if rest and rest[0] != "--family":
+        nerd_mono_ko_font_path = rest[0]
+        rest = rest[1:]
+
+    if rest:
+        if len(rest) != 2 or rest[0] != "--family":
+            raise ValueError(
+                "Usage: --worker WEIGHT KO_FONT [NERD_KO_FONT] [--family FAMILY]"
+            )
+        family_name = rest[1]
+
+    return weight, ko_font_path, nerd_mono_ko_font_path, get_family_aliases(family_name)
 
 
 def main() -> int:
@@ -593,10 +626,17 @@ def main() -> int:
         is_nerd_font = len(sys.argv) == 5 and sys.argv[4] == "--nerd-mono"
         return 0 if prepare_korean_font(sys.argv[2], sys.argv[3], is_nerd_font) else 1
 
-    if len(sys.argv) in (4, 5) and sys.argv[1] == "--worker":
-        nerd_mono_ko_font_path = sys.argv[4] if len(sys.argv) == 5 else sys.argv[3]
+    if len(sys.argv) >= 4 and sys.argv[1] == "--worker":
+        try:
+            weight, ko_font_path, nerd_mono_ko_font_path, family_aliases = parse_worker_args(
+                sys.argv[2:]
+            )
+        except ValueError as e:
+            print(f"[ERROR] {e}")
+            return 1
+
         success = build_weight_with_variants(
-            sys.argv[2], sys.argv[3], nerd_mono_ko_font_path
+            weight, ko_font_path, nerd_mono_ko_font_path, family_aliases
         )
         return 0 if success else 1
 

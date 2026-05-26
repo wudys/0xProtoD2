@@ -132,6 +132,7 @@ class TestFontBuildProcess(unittest.TestCase):
             weight,
             ko_font_path,
             name_part=None,
+            family_aliases=None,
         ):
             calls.append((is_nerd_font, ko_font_path))
             return True
@@ -244,15 +245,29 @@ class TestFontBuildProcess(unittest.TestCase):
             "ZxProtoD2-fonts-1.2.3.zip",
         )
 
+    def test_build_family_option_accepts_single_known_family(self):
+        """build --family는 알려진 family alias 하나만 선택합니다."""
+        import build
+
+        self.assertEqual(
+            build.parse_family_option(["--family", "ZxProtoD2"]),
+            ("ZxProtoD2",),
+        )
+
+        with self.assertRaises(ValueError):
+            build.parse_family_option(["--family", "UnknownD2"])
+
     def test_run_build_fonts_processes_italic_family(self):
         """빌드 오케스트레이터는 Italic 계열도 준비하고 worker에 전달합니다."""
         import build
 
         prepared_weights = []
         worker_weights = []
+        worker_commands = []
 
         class FakeProcess:
             def __init__(self, command):
+                worker_commands.append(command)
                 worker_weights.append(command[4])
 
             def wait(self):
@@ -280,6 +295,36 @@ class TestFontBuildProcess(unittest.TestCase):
             ],
         )
         self.assertEqual(worker_weights, ["regular", "bold", "italic"])
+        self.assertTrue(all("--family" not in command for command in worker_commands))
+
+    def test_run_build_fonts_passes_selected_family_to_workers(self):
+        """선택 family 빌드는 각 worker에 --family를 전달합니다."""
+        import build
+
+        worker_commands = []
+
+        class FakeProcess:
+            def __init__(self, command):
+                worker_commands.append(command)
+
+            def wait(self):
+                return 0
+
+        with mock.patch.object(build.shutil, "which", return_value="fontforge"), \
+            mock.patch.object(build, "run_prepare_korean_font", return_value=True), \
+            mock.patch.object(build.tempfile, "TemporaryDirectory") as temp_dir, \
+            mock.patch.object(build.subprocess, "Popen", FakeProcess):
+            temp_dir.return_value.__enter__.return_value = "/tmp"
+
+            self.assertTrue(build.run_build_fonts(("ZxProtoD2",)))
+
+        self.assertEqual(len(worker_commands), 3)
+        self.assertTrue(
+            all(
+                command[-2:] == ["--family", "ZxProtoD2"]
+                for command in worker_commands
+            )
+        )
 
     def test_hangulify_build_fonts_processes_italic_family(self):
         """FontForge worker 경로도 Italic 계열을 병합합니다."""
@@ -292,7 +337,12 @@ class TestFontBuildProcess(unittest.TestCase):
             prepared_weights.append((weight, os.path.basename(output_path), is_nerd_font))
             return True
 
-        def record_build(weight, ko_font_path, nerd_mono_ko_font_path):
+        def record_build(
+            weight,
+            ko_font_path,
+            nerd_mono_ko_font_path,
+            family_aliases=None,
+        ):
             merged_weights.append(weight)
             return True
 
@@ -374,6 +424,7 @@ class TestFontBuildProcess(unittest.TestCase):
             weight,
             ko_font_path,
             name_part=None,
+            family_aliases=None,
         ):
             calls.append((en_font_path, is_nerd_font, name_part))
             return True
@@ -604,6 +655,40 @@ class TestFontBuildProcess(unittest.TestCase):
             ],
         )
 
+    def test_process_font_file_can_limit_output_to_selected_family(self):
+        """선택 family 빌드는 지정한 alias 산출물만 생성합니다."""
+        import hangulify
+
+        class FakeFont:
+            familyname = "0xProto"
+            fontname = "0xProto-Regular"
+
+        output_dirs = []
+
+        def record_generate(font, output_dir, is_nerd_font):
+            output_dirs.append(output_dir)
+            return True
+
+        def update_family(font, style, old_name, new_name, base_family_name=None):
+            font.familyname = new_name
+
+        with mock.patch.object(hangulify, "merge_korean_glyphs"), \
+            mock.patch.object(hangulify, "get_font_style", return_value="Regular"), \
+            mock.patch.object(hangulify, "update_font_metadata", update_family), \
+            mock.patch.object(hangulify, "generate_font_files", record_generate):
+            self.assertTrue(
+                hangulify.process_font_file(
+                    FakeFont(),
+                    FakeFont(),
+                    False,
+                    "0xProto-Regular.ttf",
+                    "/tmp/custom-output",
+                    ("ZxProtoD2",),
+                )
+            )
+
+        self.assertEqual(output_dirs, [os.path.join("/tmp/custom-output", "ZxProtoD2")])
+
     def test_process_font_variant_closes_fonts_and_reports_failure(self):
         """variant 처리 실패 시에도 열었던 폰트를 닫고 실패를 반환합니다."""
         import hangulify
@@ -645,6 +730,23 @@ class TestFontBuildProcess(unittest.TestCase):
 
         self.assertTrue(ko_font.closed)
         self.assertTrue(en_font.closed)
+
+    def test_worker_args_parse_optional_family(self):
+        """FontForge worker 인자는 선택 family를 해석합니다."""
+        import hangulify
+
+        self.assertEqual(
+            hangulify.parse_worker_args(
+                ["regular", "/tmp/ko.ttf", "/tmp/ko-nerd.ttf", "--family", "ZxProtoD2"]
+            ),
+            ("regular", "/tmp/ko.ttf", "/tmp/ko-nerd.ttf", ("ZxProtoD2",)),
+        )
+        self.assertEqual(
+            hangulify.parse_worker_args(
+                ["regular", "/tmp/ko.ttf", "--family", "0xProtoD2"]
+            ),
+            ("regular", "/tmp/ko.ttf", "/tmp/ko.ttf", ("0xProtoD2",)),
+        )
 
     def test_build_weight_with_variants_reports_any_failure(self):
         """하나의 variant라도 실패하면 weight 빌드 전체를 실패로 봅니다."""
