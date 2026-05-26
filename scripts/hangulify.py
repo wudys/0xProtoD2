@@ -12,6 +12,7 @@ except ImportError:
     fontforge = None
 
 from config import (
+    BUILT_FONT_VERSION_PATH,
     BUILT_FONTS_PATH,
     EN_FONT_PATH,
     KO_FONT_PATH,
@@ -244,12 +245,37 @@ def get_font_extensions(is_nerd_font: bool) -> list[str]:
     return ["ttf", "woff2"]
 
 
+def read_built_font_version() -> str | None:
+    """최종 산출 폰트에 적용할 release version을 읽습니다."""
+    if not os.path.exists(BUILT_FONT_VERSION_PATH):
+        return None
+
+    with open(BUILT_FONT_VERSION_PATH, "r", encoding="utf-8") as version_file:
+        version = version_file.read().strip()
+
+    return version or None
+
+
+def apply_built_font_version(font: fontforge.font, version: str) -> None:
+    """최종 산출 폰트의 version 메타데이터를 release version으로 맞춥니다."""
+    font.version = version
+    if hasattr(font, "appendSFNTName"):
+        font.appendSFNTName("English (US)", "Version", version)
+
+
 def generate_font_files(
     font: fontforge.font,
     output_dir: str,
     is_nerd_font: bool,
 ) -> bool:
     """최종 TTF 및 WOFF2 폰트 파일을 생성하고 내보냅니다."""
+    built_font_version = read_built_font_version()
+    if not built_font_version:
+        print(f"[ERROR] 최종 산출물 버전 파일을 찾을 수 없습니다: {BUILT_FONT_VERSION_PATH}")
+        return False
+
+    apply_built_font_version(font, built_font_version)
+
     os.makedirs(output_dir, exist_ok=True)
     output_filename_base = font.fontname
     success = True

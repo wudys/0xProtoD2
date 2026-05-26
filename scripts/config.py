@@ -7,6 +7,8 @@ import os
 ASSETS_PATH: str = "assets"
 # 최종 폰트 파일이 저장될 디렉터리입니다.
 BUILT_FONTS_PATH: str = os.path.join(ASSETS_PATH, "built_fonts")
+# 최종 산출물의 release version 파일
+BUILT_FONT_VERSION_PATH: str = os.path.join(BUILT_FONTS_PATH, "version")
 # 릴리즈 압축 파일이 저장될 디렉터리입니다.
 RELEASE_FILES_PATH: str = "release_files"
 RELEASE_NOTES_PATH: str = os.path.join(RELEASE_FILES_PATH, "RELEASE_NOTES.md")

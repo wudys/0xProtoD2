@@ -366,6 +366,39 @@ class TestFontBuildProcess(unittest.TestCase):
                 )
             )
 
+    def test_generate_font_files_applies_built_font_version(self):
+        """최종 산출 폰트에는 built_fonts/version 값을 version 메타데이터로 적용합니다."""
+        from hangulify import generate_font_files
+
+        class FakeFont:
+            fontname = "0xProtoD2-Regular"
+
+            def __init__(self):
+                self.version = "source-version"
+                self.generated_versions = []
+                self.sfnt_names = []
+
+            def appendSFNTName(self, language, name, value):
+                self.sfnt_names.append((language, name, value))
+
+            def generate(self, output_path):
+                self.generated_versions.append(self.version)
+
+        font = FakeFont()
+        with mock.patch("hangulify.os.makedirs"), \
+            mock.patch("hangulify.read_built_font_version", return_value="v1.2.3"):
+            self.assertTrue(
+                generate_font_files(
+                    font,
+                    os.path.join("/tmp", "fonts"),
+                    is_nerd_font=False,
+                )
+            )
+
+        self.assertEqual(font.generated_versions, ["v1.2.3", "v1.2.3"])
+        self.assertEqual(font.version, "v1.2.3")
+        self.assertIn(("English (US)", "Version", "v1.2.3"), font.sfnt_names)
+
     def test_process_font_file_uses_given_output_directory(self):
         """단일 폰트 처리는 호출자가 넘긴 출력 디렉터리를 그대로 사용합니다."""
         import hangulify
