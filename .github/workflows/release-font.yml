@@ -1,10 +1,9 @@
-name: Build and Release FiraD2 Fonts
+name: Release 0xProtoD2 Fonts
 
 on:
   push:
     tags:
-      - 'v*.*.*'
-  workflow_dispatch: # Allow manual triggering
+      - "v*.*.*"
 
 jobs:
   build:
@@ -15,88 +14,90 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y fontforge python3-fontforge wget unzip
-
-      - name: Download required font assets
-        run: |
-          # Create assets directories
-          mkdir -p assets/{en_font,ko_font,en_nerd_font,built_fonts}
-          
-          # Download FiraCode fonts
-          echo "Downloading FiraCode fonts..."
-          wget -q https://github.com/tonsky/FiraCode/releases/download/6.2/Fira_Code_v6.2.zip
-          unzip -j Fira_Code_v6.2.zip "ttf/*" -d assets/en_font/
-          rm Fira_Code_v6.2.zip
-          
-          # Download D2Coding fonts
-          echo "Downloading D2Coding fonts..."
-          wget -q https://github.com/naver/d2codingfont/releases/download/VER1.3.2/D2Coding-Ver1.3.2-20180524.zip
-          unzip -j D2Coding-Ver1.3.2-20180524.zip "D2Coding/*.ttf" -d assets/ko_font/
-          rm D2Coding-Ver1.3.2-20180524.zip
-          
-          # Download FiraCode NerdFont
-          echo "Downloading FiraCode NerdFont..."
-          wget -q https://github.com/ryanoasis/nerd-fonts/releases/download/v3.1.1/FiraCode.zip
-          unzip -j FiraCode.zip "*.ttf" -d assets/en_nerd_font/
-          rm FiraCode.zip
-          
-          echo "Assets downloaded successfully"
-          ls -la assets/*/
-
-      - name: Build fonts
-        run: |
-          echo "Building fonts..."
-          python3 scripts/build.py build
-          echo "Build completed. Generated files:"
-          ls -la assets/built_fonts/
-
       - name: Prepare release files
         run: |
-          # Create a release directory and copy files with proper naming
-          mkdir -p release_files
-          
-          # Copy TTF files
-          find assets/built_fonts -name '*.ttf' -exec cp {} release_files/ \;
-          
-          # Copy WOFF2 files  
-          find assets/built_fonts -name '*.woff2' -exec cp {} release_files/ \;
-          
-          echo "Files prepared for release:"
-          ls -la release_files/
+          python3 <<'PY'
+          from pathlib import Path
+          import os
+          import shutil
+          import sys
+          import zipfile
+
+          sys.path.insert(0, "scripts")
+          from config import (
+              BUILT_FONTS_PATH,
+              EN_FONT_VERSION_PATH,
+              FONT_FAMILY_ALIASES,
+              KO_FONT_VERSION_PATH,
+              RELEASE_ARCHIVE_NAMES,
+              RELEASE_FILES_PATH,
+              RELEASE_NOTES_PATH,
+          )
+
+          required_suffixes = [
+              "Regular.ttf",
+              "Regular.woff2",
+              "Bold.ttf",
+              "Bold.woff2",
+              "NL-Regular.ttf",
+              "NL-Regular.woff2",
+              "NL-Bold.ttf",
+              "NL-Bold.woff2",
+              "NL-NerdFontMono-Regular.ttf",
+              "NL-NerdFontMono-Bold.ttf",
+          ]
+
+          built_fonts_dir = Path(BUILT_FONTS_PATH)
+          release_dir = Path(RELEASE_FILES_PATH)
+          shutil.rmtree(release_dir, ignore_errors=True)
+          release_dir.mkdir(parents=True, exist_ok=True)
+
+          for family_name in FONT_FAMILY_ALIASES:
+              family_dir = built_fonts_dir / family_name
+              if not family_dir.is_dir():
+                  raise SystemExit(f"[ERROR] Missing built font directory: {family_dir}")
+
+              for suffix in required_suffixes:
+                  font_path = family_dir / f"{family_name}-{suffix}"
+                  if not font_path.is_file():
+                      raise SystemExit(f"[ERROR] Missing release font: {font_path}")
+
+              nerd_webfonts = list(family_dir.glob("*NerdFontMono*.woff2"))
+              if nerd_webfonts:
+                  raise SystemExit(
+                      f"[ERROR] Nerd Font webfonts should not be released: {nerd_webfonts[0]}"
+                  )
+
+              archive_path = release_dir / RELEASE_ARCHIVE_NAMES[family_name]
+              with zipfile.ZipFile(archive_path, "w", zipfile.ZIP_DEFLATED) as archive:
+                  for path in sorted(family_dir.rglob("*")):
+                      if path.is_file():
+                          archive.write(path, path.relative_to(built_fonts_dir))
+
+          release_notes_lines = [
+              f"# Release {os.environ['GITHUB_REF_NAME']}",
+              "",
+              "0xProtoD2 font release.",
+              "",
+              "## Source Font Versions",
+              f"- 0xProto: {Path(EN_FONT_VERSION_PATH).read_text(encoding='utf-8').strip()}",
+              f"- D2Coding: {Path(KO_FONT_VERSION_PATH).read_text(encoding='utf-8').strip()}",
+              "",
+              "## Each archive contains",
+              "- Ligature fonts: TTF and WOFF2",
+              "- No-ligature fonts (`NL`): TTF and WOFF2",
+              "- Nerd Font Mono no-ligature fonts (`NL-NerdFontMono`): TTF only",
+              "",
+          ]
+          release_notes = "\n".join(release_notes_lines)
+          Path(RELEASE_NOTES_PATH).write_text(release_notes, encoding="utf-8")
+          PY
 
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
-          files: release_files/*
-          name: FiraD2 Release ${{ github.ref_name }}
-          body: |
-            # FiraD2 Font Release ${{ github.ref_name }}
-            
-            This release includes FiraCode fonts with Korean Hangul support from D2Coding.
-            
-            ## Available Font Files:
-            
-            ### Regular Fonts
-            - `FiraD2-Regular.ttf` - Main font for general use
-            - `FiraD2-Regular.woff2` - Web font version
-            - `FiraD2-Bold.ttf` - Bold variant
-            - `FiraD2-Bold.woff2` - Bold web font version
-            
-            ### Nerd Font Variants (with icons)
-            - `FiraD2NerdFont-Regular.ttf` - With Nerd Font icons
-            - `FiraD2NerdFont-Regular.woff2` - Web font with icons
-            - `FiraD2NerdFont-Bold.ttf` - Bold with icons
-            - `FiraD2NerdFont-Bold.woff2` - Bold web font with icons
-            
-            ## Installation
-            
-            Download the `.ttf` files for desktop use, or `.woff2` files for web projects.
-            
-            For more information, see the [README](https://github.com/partrita/FiraD2/blob/main/README.md).
-          draft: false
-          prerelease: false
+          files: release_files/*.zip
+          name: Release ${{ github.ref_name }}
+          body_path: release_files/RELEASE_NOTES.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

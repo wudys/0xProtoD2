@@ -1,234 +1,104 @@
-# FiraD2 - 한글을 지원하는 FiraCode
+# 0xProtoD2
 
-[English](README_en.md) | [한국어](README_ko.md)
+![0xProtoD2 preview](assets/preview.png)
 
-![GitHub release (latest by date)](https://img.shields.io/github/v/release/partrita/FiraD2?style=flat-square)
-![License](https://img.shields.io/github/license/partrita/FiraD2?style=flat-square)
-![Build Status](https://img.shields.io/github/actions/workflow/status/partrita/FiraD2/release-font.yml?style=flat-square)
+0xProtoD2는 [0xProto](https://github.com/0xType/0xProto)를 주 폰트로 쓰면서 [D2Coding](https://github.com/naver/d2codingfont)의 한글 글리프를 함께 사용할 수 있도록 만든 프로그래밍 글꼴입니다. fallback font나 secondary font를 지정하기 어려운 환경에서도 영문 코드와 한글 주석, 문서를 한 family 안에서 균형 있게 표시하는 것을 목표로 합니다.
 
-**FiraD2**는 FiraCode의 합자(ligature) 및 코딩 기능과 D2Coding의 뛰어난 한글 지원을 결합한 프로그래밍 글꼴입니다. 이 글꼴은 영문과 한글 텍스트가 모두 포함된 코드에 최적의 가독성을 제공합니다.
+## 특징
 
-## ✨ 특징
+- **비변형 ligature 정책**: [0xProto의 특징](https://github.com/0xType/0xProto#4-ligatures-that-dont-deform-shape)을 따라 `!=`를 `≠`처럼 의미와 형태가 달라지는 프로그래밍 합자로 바꾸지 않습니다. 이 외에도 0xProto의 특징들이 적용됩니다.
+- **다양한 버전**: 기본, No Ligatures, Nerd Font Mono, 웹폰트용 WOFF2 파일을 제공합니다.
+- **조정 가능한 한글 메트릭**: 한글 폭, 외곽선 크기, 좌우 여백을 빌드 설정으로 조정할 수 있습니다.
 
-- **완벽한 한글 지원**: D2Coding의 한글 글리프(U+3131-U+318E, U+AC00-U+D7A3)를 포함합니다.
-- **프로그래밍 합자**: FiraCode의 인기 있는 프로그래밍 합자(→, >=, != 등)를 유지합니다.
-- **다양한 버전**: 일반 글꼴, 아이콘이 포함된 Nerd Font 버전, 웹 폰트를 제공합니다.
-- **최적화된 간격**: 가독성 향상을 위해 문자 너비를 세심하게 조정했습니다.
-- **크로스플랫폼**: Windows, macOS, Linux에서 작동합니다.
+## 설치
 
-## 📥 다운로드
+[Releases](https://github.com/wudys/0xProtoD2/releases/latest)에서 원하는 폰트 파일을 내려받아 설치합니다.
 
-[Releases](https://github.com/partrita/FiraD2/releases) 페이지에서 최신 글꼴을 다운로드하세요.
+| 버전                        | 설명                                              | 추천 환경                             |
+| --------------------------- | ------------------------------------------------- | ------------------------------------- |
+| `0xProtoD2`                 | 0xProto의 비변형 ligature 정책을 따르는 기본 버전 | 코드 에디터, IDE                      |
+| `0xProtoD2-NL`              | OpenType ligature 기능을 제거한 버전              | ligature를 완전히 끄고 싶은 환경      |
+| `0xProtoD2-NL-NerdFontMono` | Nerd Font 아이콘이 포함된 mono 버전               | 터미널, Vim/Neovim                    |
+| `ZxProtoD2`                 | `0xProtoD2`와 같은 글리프를 가진 호환 family      | `0xProtoD2` 이름이 표시되지 않는 환경 |
 
-### 글꼴 버전 설명
+기본 버전과 `NL` 버전은 TTF와 WOFF2를 제공하고, `NL-NerdFontMono` 버전은 TTF만 제공합니다.
 
-| 파일 | 설명 | 추천 환경 |
-|------|-------------|----------|
-| `FiraD2-Regular.ttf` | 일반용 기본 글꼴 | 코드 에디터, IDE |
-| `FiraD2-Bold.ttf` | 굵은 글꼴 | 강조, 헤더 |
-| `FiraD2-Regular.woff2` | 웹 폰트 형식 | 웹 애플리케이션 |
-| `FiraD2NerdFont-Regular.ttf` | 프로그래밍 아이콘 포함 | 터미널, Vim/Neovim |
-| `FiraD2NerdFont-Bold.ttf` | 아이콘 포함 굵은 글꼴 | 터미널 강조 |
+## 빌드
 
-### 설치
+### 요구사항
 
-#### Windows
-1. `.ttf` 파일 다운로드
-2. 마우스 오른쪽 버튼을 클릭하고 "설치" 또는 "모든 사용자용으로 설치" 선택
-3. 애플리케이션 다시 시작
-
-#### macOS
-1. `.ttf` 파일 다운로드
-2. 더블 클릭하여 서체 관리자 열기
-3. "서체 설치" 클릭
-4. 애플리케이션 다시 시작
-
-#### Linux
-1. `.ttf` 파일 다운로드
-2. `~/.local/share/fonts/` 또는 `/usr/share/fonts/`로 복사
-3. `fc-cache -fv` 실행
-4. 애플리케이션 다시 시작
-
-## 🛠️ 소스에서 빌드하기
-
-### 사전 요구사항
-
-빌드하기 전에 다음이 필요합니다:
 - Python 3.7+
-- FontForge (Python 바인딩 포함)
-- wget 및 unzip 유틸리티
+- FontForge
+- FontForge Python 바인딩
+- zip
+- Nerd Font Mono 패치용 인터넷 연결
 
-### 방법 1: Nix 사용 (권장)
+Ubuntu/Debian:
 
-모든 종속성을 관리하며 FiraD2를 빌드하는 가장 쉬운 방법입니다:
-
-```bash
-# 저장소 복제
-git clone https://github.com/partrita/FiraD2.git
-cd FiraD2
-
-# Nix 개발 환경 진입
-nix develop
-
-# 글꼴 빌드 (에셋 자동 다운로드)
-python scripts/build.py build
-
-# 완료 후 종료
-exit
-```
-
-### 방법 2: Docker 사용
-
-컨테이너화된 환경에서 빌드합니다:
-
-```bash
-# Docker 이미지 복제 및 빌드
-git clone https://github.com/partrita/FiraD2.git
-cd FiraD2
-docker build -t firad2 .
-
-# 대화형 컨테이너 실행
-docker run -it -v "$(pwd)":/app firad2
-
-# 컨테이너 내부: 글꼴 빌드
-python3 scripts/build.py build
-
-# 컨테이너 종료
-exit
-```
-
-### 방법 3: 수동 설정
-
-종속성을 수동으로 설정하려는 고급 사용자를 위한 방법입니다:
-
-#### Ubuntu/Debian
 ```bash
 sudo apt-get update
-sudo apt-get install fontforge python3-fontforge wget unzip
+sudo apt-get install fontforge python3-fontforge zip
 ```
 
-#### macOS
+macOS:
+
 ```bash
-brew install fontforge wget
-pip3 install fontforge-python
+brew install fontforge
 ```
 
-#### 수동 빌드 과정
+빌드:
+
 ```bash
-# 저장소 복제
-git clone https://github.com/partrita/FiraD2.git
-cd FiraD2
-
-# 필요한 글꼴 에셋 다운로드 (수동으로 진행해야 합니다)
-# - FiraCode: https://github.com/tonsky/FiraCode/releases
-# - D2Coding: https://github.com/naver/d2codingfont/releases
-# - FiraCode NerdFont: https://github.com/ryanoasis/nerd-fonts/releases
-
-# assets/ 디렉토리에 글꼴 압축 해제:
-# assets/en_font/        - FiraCode TTF 파일
-# assets/ko_font/        - D2Coding TTF 파일
-# assets/en_nerd_font/   - FiraCode NerdFont TTF 파일
-
-# 글꼴 빌드
 python3 scripts/build.py build
-
-# 정리 (선택 사항)
-python3 scripts/build.py clean
 ```
 
-### 빌드 명령어
+미리보기 생성:
 
-| 명령어 | 설명 |
-|---------|-------------|
-| `python scripts/build.py build` | 기존 에셋으로 글꼴 빌드 |
-| `python scripts/build.py test` | 글꼴 빌드 과정 테스트 |
-| `python scripts/build.py clean` | 생성된 파일 정리 |
+미리보기 생성에는 Pillow와 fontTools가 추가로 필요합니다.
 
-## 🎨 사용 예시
-
-### VS Code
-`settings.json`에 다음을 추가하세요:
-```json
-{
-    "editor.fontFamily": "FiraD2, Consolas, monospace",
-    "editor.fontLigatures": true,
-    "editor.fontSize": 14
-}
-```
-
-### 터미널 (Nerd Font 버전 사용 시)
 ```bash
-# 글꼴 설치 확인
-fc-list | grep FiraD2
-
-# 터미널이 FiraD2NerdFont-Regular를 사용하도록 설정
+python3 -m pip install pillow fonttools
 ```
 
-### 웹 프로젝트
-```css
-@font-face {
-    font-family: 'FiraD2';
-    src: url('path/to/FiraD2-Regular.woff2') format('woff2');
-    font-display: swap;
-}
-
-code, pre {
-    font-family: 'FiraD2', 'Fira Code', monospace;
-}
+```bash
+python3 scripts/build.py preview
 ```
 
-## ⚙️ 설정
+`preview/balance-comparison.png`에는 현재 설정값과 D2Coding/0xProtoD2 렌더링 비교가 함께 표시됩니다.
+`preview/metrics.json`에는 실제 advance width 측정값이 저장됩니다.
 
-`scripts/config.py` 파일에 빌드 설정 옵션이 있습니다:
+테스트:
 
-- `KOREAN_FONT_WIDTH`: 한글 문자 너비
-- `ENGLISH_FONT_WIDTH`: 영문 문자 너비
-- `TARGET_EM`: 글꼴 스케일링을 위한 Target em 크기
-- 글꼴 소스 경로 및 출력 디렉토리
+```bash
+python3 scripts/test_font_build.py
+```
 
-## 🤝 기여하기
+## 커스텀 설정
 
-1. 저장소 Fork
-2. 기능 브랜치 생성: `git checkout -b feature/amazing-feature`
-3. 변경사항 적용
-4. 빌드 과정 테스트
-5. 변경사항 커밋: `git commit -m 'Add amazing feature'`
-6. 브랜치에 푸시: `git push origin feature/amazing-feature`
-7. Pull Request 생성
+한글 폭과 외곽선 크기는 `scripts/font_settings.py`에서 조정할 수 있습니다.
 
-## 📋 요구사항
+| 설정                  | 기본값 | 설명                                                     |
+| --------------------- | -----: | -------------------------------------------------------- |
+| `HANGUL_WIDTH_RATIO`  |  `2.0` | 한글 advance width를 영문 폭의 몇 배로 둘지 정합니다.    |
+| `HANGUL_GLYPH_SCALE`  | `0.96` | advance width는 유지한 채 한글 외곽선 크기만 조정합니다. |
+| `HANGUL_SIDE_BEARING` |  `100` | 한글 셀 안쪽 좌우 여백을 조정합니다.                     |
 
-### 소스 글꼴
-- **FiraCode**: 합자를 포함한 기본 프로그래밍 글꼴
-- **D2Coding**: 한글 지원을 위한 한국어 코딩 글꼴
-- **FiraCode Nerd Font**: 아이콘이 추가된 버전
+## FAQ
 
-### 빌드 종속성
-- Python 3.7+
-- FontForge (Python 바인딩 포함)
-- 기본 Unix 유틸리티 (wget, unzip)
+### 폰트 이름이 왜 두 개인가요?
 
-## 🐛 알려진 문제
+`0xProtoD2`와 `ZxProtoD2`는 같은 글리프를 가진 같은 폰트입니다. `0xProto` 이름은 OpenType 표준상 문제가 없지만, 일부 애플리케이션/플랫폼 호환성을 위해 `ZxProtoD2`도 함께 제공합니다. [관련 내용](https://github.com/0xType/0xProto/pull/112)
 
-- 일부 터미널 에뮬레이터에서 합자가 올바르게 표시되지 않을 수 있습니다.
-- 웹 폰트 로딩 시 적절한 CORS 헤더가 필요할 수 있습니다.
-- 특정 애플리케이션에서는 글꼴 메트릭 조정이 필요할 수 있습니다.
+### WOFF2도 제공하나요?
 
-## 📄 라이선스
+기본 버전과 No Ligatures 버전은 TTF와 WOFF2를 제공합니다. Nerd Font Mono 버전은 TTF만 제공합니다.
 
-이 프로젝트는 [SIL Open Font License 1.1](LICENSE)에 따라 라이선스가 부여됩니다.
+## 라이선스
 
-### 글꼴 라이선스
-- **FiraCode**: SIL OFL 1.1
-- **D2Coding**: SIL OFL 1.1
-- **Nerd Fonts**: MIT License
+이 프로젝트는 [SIL Open Font License 1.1](LICENSE)을 따릅니다. [FiraD2](https://github.com/partrita/FiraD2)에서 포크해 시작했지만, 0xProtoD2에 맞게 여러 변경이 이뤄졌습니다.
 
-## 🙏 감사
+- 0xProto: SIL OFL 1.1
+- D2Coding: SIL OFL 1.1
+- Nerd Fonts Patcher: MIT License
 
-- [FiraCode](https://github.com/tonsky/FiraCode) - Nikita Prokopov
-- [D2Coding](https://github.com/naver/d2codingfont) - NAVER
-- [Nerd Fonts](https://github.com/ryanoasis/nerd-fonts) 프로젝트
-
----
-
-**한글과 영문 코드를 다루는 개발자들을 위해 ❤️ 로 만들었습니다**
+원본 폰트의 저작권 고지는 유지해야 합니다.
