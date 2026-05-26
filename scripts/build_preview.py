@@ -11,6 +11,13 @@ from font_settings import get_hangul_settings
 
 
 PREVIEW_PATH = "preview"
+README_PREVIEW_IMAGE_PATH = os.path.join(ASSETS_PATH, "preview.png")
+README_PREVIEW_FONT_SIZE = 28
+README_HEADER_FONT_SIZE = 34
+README_NOTE_FONT_SIZE = 24
+README_FOOTER_FONT_SIZE = 24
+README_TITLE_ICON_SIZE = 36
+README_GITHUB_ICON_SIZE = 36
 SAMPLE_TEXTS = [
     "00000000000000000000",
     "가나다라마바사아자차카타파하",
@@ -52,8 +59,9 @@ def render_preview_png(
     primary_metrics: dict[str, object],
 ) -> None:
     font_size = 34
-    label_font = ImageFont.truetype("/System/Library/Fonts/Supplemental/Arial.ttf", 16)
-    info_font = ImageFont.truetype("/System/Library/Fonts/Supplemental/Arial.ttf", 18)
+    ui_font_path = str(primary_metrics["font"])
+    label_font = ImageFont.truetype(ui_font_path, 16)
+    info_font = ImageFont.truetype(ui_font_path, 18)
     fonts = [(label, ImageFont.truetype(path, font_size)) for label, path in font_paths]
 
     width = 1500
@@ -110,6 +118,64 @@ def render_preview_png(
     image.save(output_path)
 
 
+def render_readme_preview(output_path: str = README_PREVIEW_IMAGE_PATH) -> bool:
+    font_path = os.path.join(
+        FONT_FAMILY_OUTPUT_PATHS["0xProtoD2"], "0xProtoD2-Regular.ttf"
+    )
+    nerd_font_path = os.path.join(
+        FONT_FAMILY_OUTPUT_PATHS["0xProtoD2"], "0xProtoD2-NL-NerdFontMono-Regular.ttf"
+    )
+    if not os.path.exists(font_path):
+        print(f"[ERROR] 미리보기용 폰트를 찾을 수 없습니다: {font_path}")
+        return False
+    if not os.path.exists(nerd_font_path):
+        print(f"[ERROR] 미리보기용 Nerd Font를 찾을 수 없습니다: {nerd_font_path}")
+        return False
+
+    font = ImageFont.truetype(font_path, README_PREVIEW_FONT_SIZE)
+    header_font = ImageFont.truetype(font_path, README_HEADER_FONT_SIZE)
+    note_font = ImageFont.truetype(font_path, README_NOTE_FONT_SIZE)
+    footer_font = ImageFont.truetype(font_path, README_FOOTER_FONT_SIZE)
+    title_icon_font = ImageFont.truetype(nerd_font_path, README_TITLE_ICON_SIZE)
+    github_icon_font = ImageFont.truetype(nerd_font_path, README_GITHUB_ICON_SIZE)
+    image = Image.new("RGB", (1280, 610), "#f7f2e8")
+    draw = ImageDraw.Draw(image)
+
+    ink = "#223044"
+    muted = "#5f6875"
+    bar = "#202a35"
+    rule = "#d9c99f"
+
+    draw.rectangle((0, 0, 1280, 88), fill=bar)
+    draw.text((54, 31), "0xProtoD2", font=header_font, fill="white")
+    draw.text((258, 27), "\uf121", font=title_icon_font, fill="white")
+    draw.text((926, 24), "\uf09b", font=github_icon_font, fill="white")
+    draw.text((966, 32), "wudys/0xProtoD2", font=footer_font, fill="white")
+
+    lines = [
+        (54, 136, 'const greeting = "안녕하세요, 0xProtoD2";', ink),
+        (54, 188, "ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz", ink),
+        (54, 240, "0123456789 ()[]{}<> /\\ | @ # $ % & * + - _", ink),
+        (54, 316, "코드, 주석과 문서를 자연스럽게 살펴보세요.", ink),
+        (54, 368, "Common ligature samples: -> <- => <= >= == === != !== && || ??", ink),
+        (54, 410, "Code ligature samples: // /// :: ::= </> <$> |> <| >> <<", ink),
+    ]
+    for x, y, text, fill in lines:
+        draw.text((x, y), text, font=font, fill=fill)
+    draw.rectangle((54, 486, 1226, 491), fill=rule)
+    draw.text(
+        (54, 516),
+        "included Regular / Bold / Italic / NL / Nerd Font Mono variants",
+        font=note_font,
+        fill=muted,
+    )
+
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    image.save(output_path)
+    print(f"[INFO] README 미리보기 PNG 생성: {output_path}")
+    return True
+
+
 def generate_preview() -> bool:
     os.makedirs(PREVIEW_PATH, exist_ok=True)
     primary_font = os.path.join(
@@ -134,7 +200,7 @@ def generate_preview() -> bool:
 
     print(f"[INFO] 미리보기 PNG 생성: {png_path}")
     print(f"[INFO] 미리보기 metrics 생성: {metrics_path}")
-    return True
+    return render_readme_preview()
 
 
 if __name__ == "__main__":

@@ -2,14 +2,14 @@
 
 ![0xProtoD2 preview](assets/preview.png)
 
-0xProtoD2는 [0xProto](https://github.com/0xType/0xProto)의 코드 가독성과 [D2Coding](https://github.com/naver/d2codingfont)의 한글 글리프를 한 family 안에 맞춘 프로그래밍 글꼴입니다. fallback font나 secondary font를 지정하기 어려운 환경에서도 영문 코드, 한글 주석, 문서를 균형 있게 표시하는 것을 목표로 합니다.
+0xProtoD2는 영문 코드와 한글 주석, 문서를 한 family 안에서 균형 있게 표시하기 위한 프로그래밍 글꼴입니다. fallback font나 secondary font를 지정하기 어려운 환경에서도 [0xProto](https://github.com/0xType/0xProto)의 코드 가독성과 [D2Coding](https://github.com/naver/d2codingfont)의 한글 프로그래밍 글꼴 경험을 함께 사용할 수 있도록 맞췄습니다.
 
 ## 특징
 
-- **0xProto의 코드 가독성**: 비슷한 글자를 구분하기 쉬운 형태, 작은 크기에서도 읽기 좋은 여백, 의미와 형태를 과하게 바꾸지 않는 ligature 정책을 따릅니다.
-- **한글 지원**: D2Coding의 한글 글리프를 함께 넣어 영문 코드와 한글 주석, 문서를 한 family 안에서 자연스럽게 표시합니다.
-- **용도별 버전 제공**: 기본, No Ligatures, Nerd Font Mono, 웹폰트용 WOFF2 파일을 제공합니다.
-- **한글 관련 설정**: 빌드 시 한글 폭, 외곽선 크기, 좌우 여백을 조정할 수 있습니다.
+- **코드 가독성**: 비슷한 글자를 구분하기 쉬운 형태, 작은 크기에서도 읽기 좋은 여백, 의미와 형태를 과하게 바꾸지 않는 ligature 정책을 따릅니다.
+- **자연스러운 한글 표시**: 한글 주석과 문서가 영문 코드와 같은 family 안에서 어색하게 튀지 않도록 폭, 외곽선 크기, 좌우 여백을 조정했습니다.
+- **용도별 버전 제공**: Regular, Bold, Italic, No Ligatures, Nerd Font Mono, 웹폰트용 WOFF2 파일을 제공합니다.
+- **빌드 설정 제공**: 한글 폭, 외곽선 크기, 좌우 여백을 빌드 시 조정할 수 있습니다.
 
 ## 설치
 
@@ -22,6 +22,8 @@
 | Nerd Font Mono | `0xProtoD2 NL Nerd Font Mono` | TTF        | 터미널, Vim/Neovim               |
 
 각 버전은 같은 글리프를 가진 `ZxProtoD2` 호환 family로도 함께 제공합니다. 릴리스 파일명에는 공백 대신 하이픈이 들어갈 수 있습니다.
+기본, NL, Nerd Font Mono family는 Regular / Bold / Italic 스타일을 제공합니다.
+`Italic` 스타일은 0xProto의 Italic 영문 글리프와 Script Variant를 포함합니다. D2Coding은 별도 Italic 한글 글리프를 제공하지 않으므로, Italic 산출물의 한글은 D2Coding Regular 글리프를 사용합니다.
 
 ## 빌드
 
@@ -52,6 +54,12 @@ brew install fontforge
 python3 scripts/build.py build
 ```
 
+테스트:
+
+```bash
+python3 scripts/test_font_build.py
+```
+
 미리보기 생성:
 
 미리보기 생성에는 Pillow와 fontTools가 추가로 필요합니다.
@@ -66,12 +74,6 @@ python3 scripts/build.py preview
 
 `preview/balance-comparison.png`에는 현재 설정값과 D2Coding/0xProtoD2 렌더링 비교가 함께 표시됩니다.
 `preview/metrics.json`에는 실제 advance width 측정값이 저장됩니다.
-
-테스트:
-
-```bash
-python3 scripts/test_font_build.py
-```
 
 ## 커스텀 설정
 
@@ -96,10 +98,11 @@ python3 scripts/test_font_build.py
 
 ## 라이선스
 
-이 프로젝트는 [SIL Open Font License 1.1](LICENSE)을 따릅니다. [FiraD2](https://github.com/partrita/FiraD2)에서 포크해 시작했지만, 0xProtoD2에 맞게 여러 변경이 이뤄졌습니다.
+이 프로젝트는 [LICENSE](LICENSE)을 따릅니다.
 
-- 0xProto: SIL OFL 1.1
-- D2Coding: SIL OFL 1.1
-- Nerd Fonts Patcher: MIT License
+- [0xProto](https://github.com/0xType/0xProto/blob/main/LICENSE): SIL OFL 1.1
+- [D2Coding](https://github.com/naver/d2codingfont/wiki/Open-Font-License): SIL OFL 1.1
+- [Nerd Fonts Patcher](https://github.com/ryanoasis/nerd-fonts/blob/master/LICENSE): MIT License
+- Forked from [FiraD2](https://github.com/partrita/FiraD2/blob/main/LICENSE): SIL OFL 1.1
 
-원본 폰트의 저작권 고지는 유지해야 합니다.
+각 라이선스 고지는 유지해야 합니다.
