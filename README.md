@@ -48,16 +48,17 @@ sudo apt-get install fontforge python3-fontforge zip
 brew install fontforge
 ```
 
-#### 빌드
+#### 빌드 및 테스트
 
 ```bash
+# 소스 폰트 버전 갱신, Nerd Font Mono 패치 확인, 최종 폰트 생성
 python3 scripts/build.py build
-```
 
-#### 테스트
+# 빌드 로직과 스크립트 단위 테스트
+python3 scripts/build.py test:logic
 
-```bash
-python3 scripts/test_font_build.py
+# 빌드 산출물의 한글 폭, alias 메트릭, 설치 메타데이터 검증
+python3 scripts/build.py test:outputs
 ```
 
 #### 미리보기 생성
