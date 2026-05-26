@@ -75,6 +75,30 @@ class TestFontBuildProcess(unittest.TestCase):
         self.assertEqual(glyph.width, 1240)
         self.assertEqual(len(glyph.transforms), 1)
 
+    def test_italic_hangul_glyphs_are_slanted_after_merge(self):
+        """Italic 산출물의 한글은 fallback synthetic italic처럼 기울입니다."""
+        from hangulify import slant_hangul_glyphs
+
+        class FakeGlyph:
+            references = ()
+
+            def __init__(self):
+                self.width = 1000
+                self.transforms = []
+
+            def transform(self, transform):
+                self.transforms.append(transform)
+
+        glyph = FakeGlyph()
+        font = {0xAC00: glyph}
+
+        slant_hangul_glyphs(font, -9)
+
+        self.assertEqual(glyph.width, 1000)
+        self.assertEqual(len(glyph.transforms), 1)
+        self.assertEqual(glyph.transforms[0][0], 1)
+        self.assertGreater(glyph.transforms[0][2], 0)
+
     def test_user_facing_hangul_settings_compute_fixed_2_cell_width(self):
         """기본 사용자 설정은 평상시 한글 advance와 여백을 계산합니다."""
         import font_settings

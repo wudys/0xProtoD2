@@ -23,7 +23,7 @@
 | No Ligatures   | `0xProtoD2 NL`                | TTF, WOFF2 | ligature를 완전히 끄고 싶은 환경 |
 | Nerd Font Mono | `0xProtoD2 NL Nerd Font Mono` | TTF        | 터미널, Vim/Neovim               |
 
-각 버전은 `ZxProtoD2` 호환 패밀리로도 제공합니다. Italic의 한글 글리프는 D2Coding Regular를 사용합니다.
+각 버전은 `ZxProtoD2` 호환 패밀리로도 제공합니다. Italic의 한글 글리프는 D2Coding Regular를 바탕으로 하되, Italic 산출물에서는 기울임 보정을 적용합니다.
 
 ## 빌드
 
@@ -57,7 +57,7 @@ python3 scripts/build.py build
 # 빌드 로직과 스크립트 단위 테스트
 python3 scripts/build.py test:logic
 
-# 빌드 산출물의 한글 폭, alias 메트릭, 설치 메타데이터 검증
+# 빌드 산출물의 한글 폭/Italic 보정, alias 메트릭, 설치 메타데이터 검증
 python3 scripts/build.py test:outputs
 ```
 

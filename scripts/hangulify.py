@@ -5,6 +5,7 @@ import sys
 import tempfile
 from typing import Any
 import re
+import math
 
 try:
     import fontforge
@@ -120,6 +121,27 @@ def process_hangul_glyphs(
 
     print("[INFO] 한글 글리프 폭/외곽선 보정을 완료했습니다.")
     return font
+
+
+def slant_hangul_glyphs(font: fontforge.font, italic_angle: float) -> None:
+    """Italic 산출물의 한글 글리프를 target font의 italic angle에 맞춰 기울입니다."""
+    if not italic_angle:
+        return
+
+    x_skew = -math.tan(math.radians(italic_angle))
+    for start, end in HANGUL_RANGES:
+        for glyph_id in range(start, end + 1):
+            if glyph_id not in font:
+                continue
+
+            glyph = font[glyph_id]
+            width = glyph.width
+            if glyph.references:
+                glyph.unlinkRef()
+            glyph.transform((1, 0, x_skew, 1, 0, 0))
+            glyph.width = width
+
+    print("[INFO] Italic 한글 글리프 기울임 보정을 완료했습니다.")
 
 
 def get_font_style(font: fontforge.font, original_filename: str = None) -> str:
@@ -369,6 +391,9 @@ def process_font_file(
         return False
 
     style = get_font_style(en_font, font_filename)
+    if "Italic" in style:
+        slant_hangul_glyphs(en_font, en_font.italicangle)
+
     base_family_name = en_font.familyname
     success = True
 

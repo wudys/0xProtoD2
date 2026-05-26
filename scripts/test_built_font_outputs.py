@@ -90,6 +90,13 @@ class TestBuiltFonts(unittest.TestCase):
         rows = self._hangul_metric_rows(font)
         return hashlib.sha256(repr(rows).encode()).hexdigest()
 
+    def _hangul_advance_digest(self, font):
+        rows = [
+            (codepoint, metrics[0])
+            for codepoint, glyph_name, metrics, *_ in self._hangul_metric_rows(font)
+        ]
+        return hashlib.sha256(repr(rows).encode()).hexdigest()
+
     def _non_name_table_digest(self, font):
         digest = hashlib.sha256()
         for tag in sorted(font.keys()):
@@ -101,6 +108,16 @@ class TestBuiltFonts(unittest.TestCase):
             digest.update(font.getTableData(tag))
 
         return digest.hexdigest()
+
+    def _gsub_feature_tags(self, font):
+        if "GSUB" not in font:
+            return set()
+
+        feature_list = font["GSUB"].table.FeatureList
+        if not feature_list:
+            return set()
+
+        return {record.FeatureTag for record in feature_list.FeatureRecord}
 
     def test_built_fonts_have_expected_hangul_advance_widths(self):
         """모든 산출 폰트의 한글 advance width는 variant별 목표값과 일치합니다."""
@@ -123,6 +140,37 @@ class TestBuiltFonts(unittest.TestCase):
                     [],
                     f"{font_path} contains Hangul glyphs outside width {expected_width}",
                 )
+
+    def test_ligature_variants_keep_calt_feature(self):
+        """한글 병합은 Ligatures variant의 contextual alternates를 제거하지 않습니다."""
+        TTFont = self._require_fonttools()
+
+        expected_calt = {
+            "0xProtoD2-Regular.ttf": True,
+            "0xProtoD2-Italic.ttf": True,
+            "0xProtoD2-Bold.ttf": True,
+            "0xProtoD2-NL-Regular.ttf": False,
+            "0xProtoD2-NL-Italic.ttf": False,
+            "0xProtoD2-NL-Bold.ttf": False,
+            "0xProtoD2-NL-NerdFontMono-Regular.ttf": False,
+            "0xProtoD2-NL-NerdFontMono-Italic.ttf": False,
+            "0xProtoD2-NL-NerdFontMono-Bold.ttf": False,
+            "ZxProtoD2-Regular.ttf": True,
+            "ZxProtoD2-Italic.ttf": True,
+            "ZxProtoD2-Bold.ttf": True,
+            "ZxProtoD2-NL-Regular.ttf": False,
+            "ZxProtoD2-NL-Italic.ttf": False,
+            "ZxProtoD2-NL-Bold.ttf": False,
+            "ZxProtoD2-NL-NerdFontMono-Regular.ttf": False,
+            "ZxProtoD2-NL-NerdFontMono-Italic.ttf": False,
+            "ZxProtoD2-NL-NerdFontMono-Bold.ttf": False,
+        }
+
+        for font_path in self._built_font_paths(suffixes=(".ttf",)):
+            filename = os.path.basename(font_path)
+            with self.subTest(font=filename):
+                has_calt = "calt" in self._gsub_feature_tags(TTFont(font_path))
+                self.assertEqual(has_calt, expected_calt[filename])
 
     def test_built_ttf_unique_ids_are_not_shared_between_font_faces(self):
         """설치 대상 TTF face들은 Unique ID를 서로 공유하지 않습니다."""
@@ -197,6 +245,42 @@ class TestBuiltFonts(unittest.TestCase):
                 self.assertEqual(
                     self._non_name_table_digest(TTFont(zero_x_path)),
                     self._non_name_table_digest(TTFont(zx_path)),
+                )
+
+    def test_built_italic_hangul_keeps_width_but_slants_outlines(self):
+        """Italic 산출물의 한글은 Regular와 폭은 같고 outline은 기울어져 다릅니다."""
+        TTFont = self._require_fonttools()
+
+        pairs = [
+            ("0xProtoD2-Regular.ttf", "0xProtoD2-Italic.ttf"),
+            ("0xProtoD2-NL-Regular.ttf", "0xProtoD2-NL-Italic.ttf"),
+            (
+                "0xProtoD2-NL-NerdFontMono-Regular.ttf",
+                "0xProtoD2-NL-NerdFontMono-Italic.ttf",
+            ),
+            ("ZxProtoD2-Regular.ttf", "ZxProtoD2-Italic.ttf"),
+            ("ZxProtoD2-NL-Regular.ttf", "ZxProtoD2-NL-Italic.ttf"),
+            (
+                "ZxProtoD2-NL-NerdFontMono-Regular.ttf",
+                "ZxProtoD2-NL-NerdFontMono-Italic.ttf",
+            ),
+        ]
+
+        for regular_name, italic_name in pairs:
+            family_dir = os.path.join(BUILT_FONTS_PATH, regular_name.split("-", 1)[0])
+            regular_path = os.path.join(family_dir, regular_name)
+            italic_path = os.path.join(family_dir, italic_name)
+
+            with self.subTest(font=italic_name):
+                regular_font = TTFont(regular_path)
+                italic_font = TTFont(italic_path)
+                self.assertEqual(
+                    self._hangul_advance_digest(regular_font),
+                    self._hangul_advance_digest(italic_font),
+                )
+                self.assertNotEqual(
+                    self._hangul_metric_digest(regular_font),
+                    self._hangul_metric_digest(italic_font),
                 )
 
 
