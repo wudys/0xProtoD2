@@ -13,7 +13,7 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(__file__))
 
-from config import BUILT_FONTS_PATH
+from config import BUILT_FONT_VERSION_PATH, BUILT_FONTS_PATH
 
 
 class TestBuiltFonts(unittest.TestCase):
@@ -119,6 +119,15 @@ class TestBuiltFonts(unittest.TestCase):
 
         return {record.FeatureTag for record in feature_list.FeatureRecord}
 
+    def _sfnt_name_values(self, font, name_id):
+        return sorted(
+            {
+                name.toUnicode()
+                for name in font["name"].names
+                if name.nameID == name_id
+            }
+        )
+
     def test_built_fonts_have_expected_hangul_advance_widths(self):
         """모든 산출 폰트의 한글 advance width는 variant별 목표값과 일치합니다."""
         TTFont = self._require_fonttools()
@@ -180,13 +189,7 @@ class TestBuiltFonts(unittest.TestCase):
         duplicates = []
         for font_path in self._built_font_paths(suffixes=(".ttf",)):
             font = TTFont(font_path)
-            values = sorted(
-                {
-                    name.toUnicode()
-                    for name in font["name"].names
-                    if name.nameID == 3
-                }
-            )
+            values = self._sfnt_name_values(font, 3)
             self.assertEqual(
                 values,
                 [os.path.splitext(os.path.basename(font_path))[0]],
@@ -198,6 +201,23 @@ class TestBuiltFonts(unittest.TestCase):
                 unique_ids[value] = font_path
 
         self.assertEqual(duplicates, [])
+
+    def test_built_fonts_use_release_version_metadata(self):
+        """모든 산출 폰트의 version name은 built_fonts/version과 일치합니다."""
+        TTFont = self._require_fonttools()
+
+        with open(BUILT_FONT_VERSION_PATH, encoding="utf-8") as version_file:
+            expected_version = version_file.read().strip()
+
+        self.assertTrue(expected_version, f"empty version file: {BUILT_FONT_VERSION_PATH}")
+
+        for font_path in self._built_font_paths():
+            font = TTFont(font_path)
+            with self.subTest(font=os.path.basename(font_path)):
+                self.assertEqual(
+                    self._sfnt_name_values(font, 5),
+                    [expected_version],
+                )
 
     def test_built_0x_and_zx_aliases_have_identical_hangul_metrics(self):
         """0xProtoD2와 ZxProtoD2 alias 산출물은 family 이름 외 한글 메트릭이 같습니다."""
