@@ -49,6 +49,32 @@ class TestFontBuildProcess(unittest.TestCase):
         self.assertEqual(len(glyph.transforms), 1)
         self.assertAlmostEqual(glyph.transforms[0][0], 0.981, places=4)
 
+    def test_hangul_reference_glyphs_are_unlinked_before_adjustment(self):
+        """참조 글리프는 생성 시 advance width가 되돌아가지 않도록 참조를 풉니다."""
+        from hangulify import _process_and_adjust_glyph
+
+        class FakeGlyph:
+            references = (("cho", (1, 0, 0, 1, 0, 0)),)
+
+            def __init__(self):
+                self.width = 1000
+                self.transforms = []
+                self.unlinked = False
+
+            def unlinkRef(self):
+                self.unlinked = True
+                self.references = ()
+
+            def transform(self, transform):
+                self.transforms.append(transform)
+
+        glyph = FakeGlyph()
+        _process_and_adjust_glyph({0xD7A3: glyph}, 0xD7A3, is_nerd_font=True)
+
+        self.assertTrue(glyph.unlinked)
+        self.assertEqual(glyph.width, 1240)
+        self.assertEqual(len(glyph.transforms), 1)
+
     def test_user_facing_hangul_settings_compute_fixed_2_cell_width(self):
         """기본 사용자 설정은 평상시 한글 advance와 여백을 계산합니다."""
         import font_settings
@@ -152,6 +178,32 @@ class TestFontBuildProcess(unittest.TestCase):
                     ],
                     False,
                 ),
+            ],
+        )
+
+    def test_run_python_test_script_uses_current_python_executable(self):
+        """build.py 테스트 서브커맨드는 현재 Python으로 테스트 파일을 실행합니다."""
+        import build
+
+        calls = []
+
+        def record_run(command, check):
+            calls.append((command, check))
+            return mock.Mock(returncode=0)
+
+        with mock.patch.object(build.subprocess, "run", record_run):
+            self.assertTrue(build.run_python_test_script("test_build_logic.py"))
+
+        self.assertEqual(
+            calls,
+            [
+                (
+                    [
+                        sys.executable,
+                        os.path.join(os.path.dirname(build.__file__), "test_build_logic.py"),
+                    ],
+                    False,
+                )
             ],
         )
 
@@ -325,6 +377,28 @@ class TestFontBuildProcess(unittest.TestCase):
         self.assertEqual(
             format_postscript_family_name("0xProtoD2 NL"),
             "0xProtoD2-NL",
+        )
+
+    def test_update_font_metadata_sets_family_specific_unique_id(self):
+        """family alias별 산출물이 폰트 캐시에서 충돌하지 않도록 Unique ID를 갱신합니다."""
+        from hangulify import update_font_metadata
+
+        class FakeFont:
+            familyname = "0xProto"
+
+            def __init__(self):
+                self.sfnt_names = []
+
+            def appendSFNTName(self, language, name, value):
+                self.sfnt_names.append((language, name, value))
+
+        font = FakeFont()
+        update_font_metadata(font, "Regular", "0xProto", "ZxProtoD2")
+
+        self.assertEqual(font.fontname, "ZxProtoD2-Regular")
+        self.assertIn(
+            ("English (US)", "UniqueID", "ZxProtoD2-Regular"),
+            font.sfnt_names,
         )
 
     def test_generated_font_output_paths_use_family_directories(self):

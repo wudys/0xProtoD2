@@ -87,6 +87,9 @@ def fit_hangul_glyph(glyph: Any, is_nerd_font: bool = False) -> Any:
     scale = get_hangul_outline_scale(source_width, is_nerd_font)
     x_offset = (target_width - (source_width * scale)) / 2
 
+    if glyph.references:
+        glyph.unlinkRef()
+
     glyph.transform((scale, 0, 0, scale, x_offset, 0))
     glyph.width = target_width
     return glyph
@@ -205,6 +208,7 @@ def update_font_metadata(
     font.fontname = f"{postscript_family_name}-{style}"
     font.fullname = f"{new_family_name} {formatted_style}"
 
+    font.appendSFNTName("English (US)", "UniqueID", font.fontname)
     font.appendSFNTName("English (US)", "Preferred Family", new_family_name)
     font.appendSFNTName("English (US)", "Family", new_family_name)
     font.appendSFNTName("English (US)", "Compatible Full", font.fullname)

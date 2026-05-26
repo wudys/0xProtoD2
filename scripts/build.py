@@ -23,10 +23,12 @@ def print_usage():
     """사용법 안내 메시지를 출력합니다."""
     print(f"python {sys.argv[0]} <subcommand>\n")
     print("subcommand:")
-    print("    build  : assets 디렉터리의 폰트를 병합하고 출력합니다.")
-    print("    preview: 빌드된 폰트의 HTML/PNG 미리보기를 생성합니다.")
-    print("    test   : 폰트 빌드 프로세스를 테스트합니다.")
-    print("    clean  : 출력 파일을 삭제합니다.")
+    print("    build        : assets 디렉터리의 폰트를 병합하고 출력합니다.")
+    print("    preview      : 빌드된 폰트의 HTML/PNG 미리보기를 생성합니다.")
+    print("    test         : 폰트 빌드 환경을 테스트합니다.")
+    print("    test:logic   : 빌드 로직과 스크립트 단위 테스트를 실행합니다.")
+    print("    test:outputs : 빌드 산출 폰트 파일을 검증합니다.")
+    print("    clean        : 출력 파일을 삭제합니다.")
 
 
 def check_font_directories():
@@ -283,14 +285,17 @@ def run_build_fonts():
         return all(return_code == 0 for return_code in return_codes)
 
 
-def update_font_versions():
+def refresh_source_font_versions():
     """소스 폰트의 version 메타데이터를 버전 파일에 반영합니다."""
     fontforge_bin = shutil.which("fontforge")
     if not fontforge_bin:
         print("[ERROR] fontforge 실행 파일을 찾을 수 없습니다.")
         return False
 
-    script_path = os.path.join(os.path.dirname(__file__), "write_font_versions.py")
+    script_path = os.path.join(
+        os.path.dirname(__file__),
+        "refresh_source_font_versions.py",
+    )
     result = subprocess.run([fontforge_bin, "-script", script_path], check=False)
     return result.returncode == 0
 
@@ -334,6 +339,13 @@ def test_font_build():
         return False
 
 
+def run_python_test_script(script_name: str) -> bool:
+    """현재 Python 실행 파일로 지정된 테스트 스크립트를 실행합니다."""
+    script_path = os.path.join(os.path.dirname(__file__), script_name)
+    result = subprocess.run([sys.executable, script_path], check=False)
+    return result.returncode == 0
+
+
 def clean():
     """출력 파일을 삭제합니다."""
     print("[INFO] 출력 파일 삭제 중")
@@ -355,7 +367,7 @@ def main():
 
     if subcommand == "build":
         print("[INFO] 폰트 버전 파일 갱신 중")
-        if not update_font_versions():
+        if not refresh_source_font_versions():
             exit(1)
         print("[INFO] Nerd Font Mono 패치 시작")
         if not patch_nerd_fonts():
@@ -372,8 +384,14 @@ def main():
         success = test_font_build()
         if not success:
             exit(1)
+    elif subcommand == "test:logic":
+        if not run_python_test_script("test_build_logic.py"):
+            exit(1)
+    elif subcommand == "test:outputs":
+        if not run_python_test_script("test_built_font_outputs.py"):
+            exit(1)
     elif subcommand == "preview":
-        from build_preview import generate_preview
+        from preview_assets import generate_preview
 
         if not generate_preview():
             exit(1)
