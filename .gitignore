@@ -21,8 +21,7 @@ pyrightconfig.json
 preview/
 
 # Downloaded on demand by scripts/build.py
-assets/NerdFontPatcher/
-assets/FontPatcher.zip
+assets/font_patcher/
 
 # Source webfonts are regenerated from TTF inputs
 assets/en_font/*.woff2

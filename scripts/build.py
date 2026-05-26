@@ -11,8 +11,8 @@ from config import (
     EN_FONT_PATH,
     EN_FONT_VERSION_PATH,
     KO_FONT_PATH,
-    KO_FONT_VERSION_PATH,
     EN_NERD_FONT_PATH,
+    FONT_PATCHER_CACHE_PATH,
     FONT_PATCHER_URL,
     NERD_FONT_VERSION_PATH,
     NO_LIGATURE_FONT_PATH,
@@ -59,7 +59,7 @@ def check_font_directories():
 
 
 def find_no_ligature_fonts():
-    """Nerd Font 패치 대상이 되는 No Ligatures Regular/Bold 폰트를 찾습니다."""
+    """Nerd Font 패치 대상이 되는 No Ligatures 폰트를 찾습니다."""
     if not os.path.exists(NO_LIGATURE_FONT_PATH):
         return []
 
@@ -68,7 +68,7 @@ def find_no_ligature_fonts():
         lowered = filename.lower()
         if not lowered.endswith(".ttf"):
             continue
-        if "regular" in lowered or "bold" in lowered:
+        if "regular" in lowered or "bold" in lowered or "italic" in lowered:
             font_files.append(os.path.join(NO_LIGATURE_FONT_PATH, filename))
 
     return sorted(font_files)
@@ -81,6 +81,8 @@ def get_expected_nerd_font_files(source_fonts):
         filename = os.path.basename(font_path)
         if "Bold" in filename:
             style = "Bold"
+        elif "Italic" in filename:
+            style = "Italic"
         elif "Regular" in filename:
             style = "Regular"
         else:
@@ -119,15 +121,25 @@ def should_patch_nerd_fonts(expected_files, current_version, source_version):
 def _download_and_extract_font_patcher(work_dir):
     """Nerd Font Patcher를 다운로드하고 압축을 해제한 뒤 실행 파일 경로를 반환합니다."""
     archive_path = os.path.join(work_dir, "FontPatcher.zip")
-    patcher_dir = os.path.join(work_dir, "NerdFontPatcher")
     print(f"[INFO] Nerd Font Patcher 다운로드 중: {FONT_PATCHER_URL}")
     urllib.request.urlretrieve(FONT_PATCHER_URL, archive_path)
 
     print("[INFO] Nerd Font Patcher 압축 해제 중")
     with zipfile.ZipFile(archive_path) as archive:
-        archive.extractall(patcher_dir)
+        archive.extractall(work_dir)
 
-    return os.path.join(patcher_dir, "font-patcher")
+    os.remove(archive_path)
+    return os.path.join(work_dir, "font-patcher")
+
+
+def _get_or_download_font_patcher():
+    """로컬 캐시의 Nerd Font Patcher를 반환하고, 없으면 한 번만 다운로드합니다."""
+    patcher_path = os.path.join(FONT_PATCHER_CACHE_PATH, "font-patcher")
+    if os.path.exists(patcher_path):
+        return patcher_path
+
+    os.makedirs(FONT_PATCHER_CACHE_PATH, exist_ok=True)
+    return _download_and_extract_font_patcher(FONT_PATCHER_CACHE_PATH)
 
 
 def _build_nerd_font_patch_command(fontforge_bin, patcher_path, font_path):
@@ -189,16 +201,15 @@ def patch_nerd_fonts():
         return True
 
     try:
-        with tempfile.TemporaryDirectory() as work_dir:
-            patcher_path = _download_and_extract_font_patcher(work_dir)
-            if not _patch_nerd_fonts_with_patcher(
-                fontforge_bin,
-                patcher_path,
-                source_fonts,
-            ):
-                return False
+        patcher_path = _get_or_download_font_patcher()
+        if not _patch_nerd_fonts_with_patcher(
+            fontforge_bin,
+            patcher_path,
+            source_fonts,
+        ):
+            return False
 
-            write_text_file(NERD_FONT_VERSION_PATH, source_version)
+        write_text_file(NERD_FONT_VERSION_PATH, source_version)
     except Exception as e:
         print(f"[ERROR] Nerd Font 패치 중 오류 발생: {e}")
         return False
@@ -252,6 +263,7 @@ def run_build_fonts():
             ):
                 return False
             prepared_fonts[weight] = (output_path, nerd_mono_output_path)
+        prepared_fonts["italic"] = prepared_fonts["regular"]
 
         processes = [
             subprocess.Popen(

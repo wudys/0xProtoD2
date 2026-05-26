@@ -42,6 +42,7 @@ EN_NERD_FONT_PATH: str = os.path.join(ASSETS_PATH, "en_nerd_font")
 NERD_FONT_VERSION_PATH: str = os.path.join(EN_NERD_FONT_PATH, "version")
 # Nerd Font Patcher 배포 아카이브
 FONT_PATCHER_URL: str = "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/FontPatcher.zip"
+FONT_PATCHER_CACHE_PATH: str = os.path.join(ASSETS_PATH, "font_patcher")
 
 # =======================================
 #  폰트 설정

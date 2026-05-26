@@ -246,13 +246,13 @@ def get_font_extensions(is_nerd_font: bool) -> list[str]:
 
 def generate_font_files(
     font: fontforge.font,
-    style: str,
     output_dir: str,
     is_nerd_font: bool,
-) -> None:
+) -> bool:
     """최종 TTF 및 WOFF2 폰트 파일을 생성하고 내보냅니다."""
     os.makedirs(output_dir, exist_ok=True)
     output_filename_base = font.fontname
+    success = True
 
     for ext in get_font_extensions(is_nerd_font):
         output_path = os.path.join(output_dir, f"{output_filename_base}.{ext}")
@@ -262,14 +262,19 @@ def generate_font_files(
             print(f"[INFO] {output_path} 내보내기 완료")
         except Exception as e:
             print(f"[ERROR] {font.fontname}에 대한 {ext.upper()} 생성 실패: {e}")
+            success = False
+
+    return success
 
 
-def get_output_dir(family_name: str) -> str:
+def get_output_dir(family_name: str, base_dir: str = BUILT_FONTS_PATH) -> str:
     for family_alias, output_dir in FONT_FAMILY_OUTPUT_PATHS.items():
         if family_name.startswith(family_alias):
-            return output_dir
+            if base_dir == BUILT_FONTS_PATH:
+                return output_dir
+            return os.path.join(base_dir, family_alias)
 
-    return BUILT_FONTS_PATH
+    return base_dir
 
 
 def scale_font_em_units(font: fontforge.font, target_em: int) -> None:
@@ -292,7 +297,7 @@ def scale_font_em_units(font: fontforge.font, target_em: int) -> None:
 
 def merge_korean_glyphs(
     target_font: fontforge.font, source_font: fontforge.font
-) -> None:
+) -> bool:
     """
     한국어 글리프를 소스 폰트에서 타겟 폰트로 복사합니다.
     """
@@ -310,9 +315,11 @@ def merge_korean_glyphs(
                         copied_count += 1
 
         print(f"[INFO] {copied_count}개의 한글 글리프를 복사했습니다.")
+        return True
 
     except Exception as e:
         print(f"[ERROR] 한글 글리프 병합 중 오류 발생: {e}")
+        return False
 
 
 def process_font_file(
@@ -321,17 +328,19 @@ def process_font_file(
     is_nerd_font: bool,
     font_filename: str,
     output_dir: str,
-) -> None:
+) -> bool:
     """
     단일 폰트 파일을 처리하여 한글 글리프를 병합하고 메타데이터를 업데이트합니다.
     """
     if is_nerd_font:
         re_encode_for_nerd_font(en_font)
 
-    merge_korean_glyphs(en_font, ko_font)
+    if not merge_korean_glyphs(en_font, ko_font):
+        return False
 
     style = get_font_style(en_font, font_filename)
     base_family_name = en_font.familyname
+    success = True
 
     for family_alias in FONT_FAMILY_ALIASES:
         update_font_metadata(
@@ -341,12 +350,14 @@ def process_font_file(
             new_name=family_alias,
             base_family_name=base_family_name,
         )
-        generate_font_files(
+        if not generate_font_files(
             en_font,
-            style,
-            get_output_dir(en_font.familyname),
+            get_output_dir(en_font.familyname, output_dir),
             is_nerd_font,
-        )
+        ):
+            success = False
+
+    return success
 
 
 def find_font_files(directory: str, weight: str = None) -> list:
@@ -387,22 +398,27 @@ def _process_font_variant(
     is_nerd_font: bool,
     weight: str,
     ko_font_path: str,
-) -> None:
+) -> bool:
     en_files = find_font_files(en_font_path, weight)
     style = f"{label}-{weight.capitalize()}"
 
     if not en_files:
         print(f"[WARNING] {style}용 영문 폰트 파일을 찾을 수 없습니다. 건너뜁니다.")
-        return
+        return True
 
     en_font_file_path = en_files[0]
+    ko_font = None
+    en_font = None
 
     try:
-        print(f"[INFO] {style} 폰트 처리 중: {os.path.basename(ko_font_path)} + {os.path.basename(en_font_file_path)}")
+        print(
+            f"[INFO] {style} 폰트 처리 중: "
+            f"{os.path.basename(ko_font_path)} + {os.path.basename(en_font_file_path)}"
+        )
 
         ko_font = fontforge.open(ko_font_path)
         en_font = fontforge.open(en_font_file_path)
-        process_font_file(
+        return process_font_file(
             en_font,
             ko_font,
             is_nerd_font,
@@ -410,11 +426,13 @@ def _process_font_variant(
             BUILT_FONTS_PATH,
         )
 
-        en_font.close()
-        ko_font.close()
-
     except Exception as e:
         print(f"[ERROR] {style} 폰트 처리 중 오류 발생: {e}")
+        return False
+    finally:
+        for font in (en_font, ko_font):
+            if font is not None:
+                font.close()
 
 
 def prepare_korean_font(
@@ -426,53 +444,75 @@ def prepare_korean_font(
         return False
 
     ko_font = fontforge.open(ko_files[0])
-    process_hangul_glyphs(ko_font, is_nerd_font)
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
-    ko_font.generate(output_path)
-    ko_font.close()
-    print(f"[INFO] 전처리 한글 폰트 생성: {output_path}")
-    return True
+    try:
+        process_hangul_glyphs(ko_font, is_nerd_font)
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        ko_font.generate(output_path)
+        print(f"[INFO] 전처리 한글 폰트 생성: {output_path}")
+        return True
+    finally:
+        ko_font.close()
 
 
-def build_weight(weight: str, ko_font_path: str) -> None:
-    build_weight_with_variants(weight, ko_font_path, ko_font_path)
+def build_weight(weight: str, ko_font_path: str) -> bool:
+    return build_weight_with_variants(weight, ko_font_path, ko_font_path)
 
 
 def build_weight_with_variants(
     weight: str, ko_font_path: str, nerd_mono_ko_font_path: str
-) -> None:
+) -> bool:
     variants = [
         ("Ligatures", EN_FONT_PATH, False, ko_font_path),
         ("No-Ligatures", NO_LIGATURE_FONT_PATH, False, ko_font_path),
         ("NerdFontMono", EN_NERD_FONT_PATH, True, nerd_mono_ko_font_path),
     ]
 
+    success = True
     for label, en_font_path, is_nerd_font, variant_ko_font_path in variants:
-        _process_font_variant(
+        if not _process_font_variant(
             label, en_font_path, is_nerd_font, weight, variant_ko_font_path
-        )
+        ):
+            success = False
+
+    return success
 
 
-def build_fonts() -> None:
+def build_fonts() -> bool:
     """
     메인 폰트 빌드 프로세스입니다.
-    새로운 디렉터리 구조에서 Regular와 Bold 폰트를 로드하고 병합합니다.
+    새로운 디렉터리 구조에서 Regular, Bold, Italic 폰트를 로드하고 병합합니다.
     """
     _require_fontforge()
     os.makedirs(BUILT_FONTS_PATH, exist_ok=True)
 
     with tempfile.TemporaryDirectory() as work_dir:
+        success = True
+        prepared_fonts = {}
         for weight in ("regular", "bold"):
             ko_cache_path = os.path.join(work_dir, f"D2Coding-{weight}.ttf")
             nerd_mono_ko_cache_path = os.path.join(
                 work_dir, f"D2Coding-{weight}-nerd-mono.ttf"
             )
-            if prepare_korean_font(weight, ko_cache_path) and prepare_korean_font(
+            if not prepare_korean_font(weight, ko_cache_path):
+                success = False
+                continue
+            if not prepare_korean_font(
                 weight, nerd_mono_ko_cache_path, is_nerd_font=True
             ):
-                build_weight_with_variants(
-                    weight, ko_cache_path, nerd_mono_ko_cache_path
-                )
+                success = False
+                continue
+            prepared_fonts[weight] = (ko_cache_path, nerd_mono_ko_cache_path)
+
+        if "regular" in prepared_fonts:
+            prepared_fonts["italic"] = prepared_fonts["regular"]
+
+        for weight, (ko_cache_path, nerd_mono_ko_cache_path) in prepared_fonts.items():
+            if not build_weight_with_variants(
+                weight, ko_cache_path, nerd_mono_ko_cache_path
+            ):
+                success = False
+
+        return success
 
 
 def main() -> int:
@@ -484,11 +524,12 @@ def main() -> int:
 
     if len(sys.argv) in (4, 5) and sys.argv[1] == "--worker":
         nerd_mono_ko_font_path = sys.argv[4] if len(sys.argv) == 5 else sys.argv[3]
-        build_weight_with_variants(sys.argv[2], sys.argv[3], nerd_mono_ko_font_path)
-        return 0
+        success = build_weight_with_variants(
+            sys.argv[2], sys.argv[3], nerd_mono_ko_font_path
+        )
+        return 0 if success else 1
 
-    build_fonts()
-    return 0
+    return 0 if build_fonts() else 1
 
 
 if __name__ == "__main__":
