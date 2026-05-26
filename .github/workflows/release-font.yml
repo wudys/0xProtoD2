@@ -91,11 +91,9 @@ jobs:
               with zipfile.ZipFile(archive_path, "w", zipfile.ZIP_DEFLATED) as archive:
                   for path in sorted(family_dir.rglob("*")):
                       if path.is_file():
-                          archive.write(path, path.relative_to(built_fonts_dir))
+                          archive.write(path, path.relative_to(family_dir))
 
           release_notes_lines = [
-              f"# Release {os.environ['GITHUB_REF_NAME']}",
-              "",
               "0xProtoD2 font release.",
               "",
               "## Source Font Versions",
