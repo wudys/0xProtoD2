@@ -34,14 +34,15 @@
 - Python 3.7+
 - FontForge
 - FontForge Python 바인딩
-- zip
-- Nerd Font Mono 패치용 인터넷 연결
+- Nerd Fonts Patcher 다운로드용 인터넷 연결(캐시가 없거나 버전이 바뀐 경우)
+- `zip`(릴리스 압축 파일 생성 시)
+- `fonttools`, `pillow`(산출물 검증/미리보기 생성 시)
 
 #### Ubuntu/Debian
 
 ```bash
 sudo apt-get update
-sudo apt-get install fontforge python3-fontforge zip
+sudo apt-get install fontforge python3-fontforge
 ```
 
 #### macOS
@@ -55,18 +56,20 @@ brew install fontforge
 최종 산출 폰트의 release version 메타데이터는 repo 최상위 `FONT_VERSION` 파일을 사용합니다.
 
 ```bash
-# 전체  빌드
+# 전체 family 빌드
 python3 scripts/build.py build
 
-# 특정 family만 빌드
+# 특정 family만 최종 산출(0xProtoD2 또는 ZxProtoD2)
 python3 scripts/build.py build --family ZxProtoD2
 
 # 빌드 로직과 스크립트 단위 테스트
 python3 scripts/build.py test:logic
 
-# 빌드된 폰트 한글 폭/Italic 보정, alias 메트릭, 설치 메타데이터 검증
+# 빌드 산출물 검증
 python3 scripts/build.py test:outputs
 ```
+
+`--family`는 최종 산출 family만 제한합니다. 소스 버전 갱신, Nerd Font Mono 패치 확인, D2Coding 전처리는 공통으로 실행됩니다.
 
 #### 미리보기 생성
 
