@@ -14,7 +14,7 @@ NOTE_FONT_SIZE = 24
 FOOTER_FONT_SIZE = 24
 
 
-def render_preview_image(output_path: str = PREVIEW_IMAGE_PATH) -> bool:
+def render_readme_preview(output_path: str = PREVIEW_IMAGE_PATH) -> bool:
     font_path = os.path.join(
         FONT_FAMILY_OUTPUT_PATHS["0xProtoD2"], "0xProtoD2-Regular.ttf"
     )
@@ -42,7 +42,7 @@ def render_preview_image(output_path: str = PREVIEW_IMAGE_PATH) -> bool:
         (54, 188, "A-z  ABCDEFGHIJKLMNOPQRSTUVWXYZ  abcdefghijklmnopqrstuvwxyz", ink),
         (54, 240, "Numbers  0123456789  Symbols  ()[]{}<> /\\ | @ # $ % & * + - _", ink),
         (54, 316, "한글과 English, 숫자 0123456789, 기호 ()[]{}<>", ink),
-        (54, 368, "코드와 문장을 한 폰트에서 함께 봅니다", ink),
+        (54, 368, "코드와 한글을 자연스럽게 함께 보여줍니다", ink),
     ]
     for x, y, text, fill in lines:
         draw.text((x, y), text, font=font, fill=fill)
@@ -68,4 +68,4 @@ def render_preview_image(output_path: str = PREVIEW_IMAGE_PATH) -> bool:
 
 
 if __name__ == "__main__":
-    raise SystemExit(0 if render_preview_image() else 1)
+    raise SystemExit(0 if render_readme_preview() else 1)

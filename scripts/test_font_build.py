@@ -111,21 +111,21 @@ class TestFontBuildProcess(unittest.TestCase):
 
     def test_preview_paths_are_under_assets_preview(self):
         """사용자 미리보기 산출물은 루트 preview 디렉터리에 모읍니다."""
-        import preview
+        import build_preview
 
-        self.assertEqual(preview.PREVIEW_PATH, "preview")
+        self.assertEqual(build_preview.PREVIEW_PATH, "preview")
 
     def test_readme_preview_image_path_and_font_size(self):
         """README 대표 이미지는 별도 스크립트에서 같은 크기 폰트로 렌더링합니다."""
-        import render_preview_image
+        import readme_preview
 
         self.assertEqual(
-            render_preview_image.PREVIEW_IMAGE_PATH,
+            readme_preview.PREVIEW_IMAGE_PATH,
             os.path.join(ASSETS_PATH, "preview.png"),
         )
-        self.assertEqual(render_preview_image.PREVIEW_FONT_SIZE, 28)
-        self.assertEqual(render_preview_image.HEADER_FONT_SIZE, 34)
-        self.assertEqual(render_preview_image.FOOTER_FONT_SIZE, 24)
+        self.assertEqual(readme_preview.PREVIEW_FONT_SIZE, 28)
+        self.assertEqual(readme_preview.HEADER_FONT_SIZE, 34)
+        self.assertEqual(readme_preview.FOOTER_FONT_SIZE, 24)
 
     def test_directory_structure(self):
         """필요한 디렉터리 구조가 존재하는지 테스트"""

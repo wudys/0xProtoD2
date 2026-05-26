@@ -352,17 +352,17 @@ def process_font_file(
 def find_font_files(directory: str, weight: str = None) -> list:
     """
     지정된 디렉터리에서 폰트 파일을 찾습니다.
-    
+
     Args:
         directory: 폰트 파일을 찾을 디렉터리
         weight: 찾을 폰트 웨이트 ("Regular" 또는 "Bold")
-        
+
     Returns:
         폰트 파일 경로의 리스트
     """
     if not os.path.exists(directory):
         return []
-    
+
     font_files = []
     for filename in os.listdir(directory):
         if filename.lower().endswith((".ttf", ".otf")):
@@ -370,7 +370,7 @@ def find_font_files(directory: str, weight: str = None) -> list:
                 font_files.append(os.path.join(directory, filename))
             elif weight.lower() in filename.lower():
                 font_files.append(os.path.join(directory, filename))
-    
+
     return sorted(font_files)
 
 
