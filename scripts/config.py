@@ -19,10 +19,10 @@ FONT_FAMILY_OUTPUT_PATHS: dict[str, str] = {
     family_name: os.path.join(BUILT_FONTS_PATH, family_name)
     for family_name in FONT_FAMILY_ALIASES
 }
-RELEASE_ARCHIVE_NAMES: dict[str, str] = {
-    family_name: f"{family_name}-fonts.zip"
-    for family_name in FONT_FAMILY_ALIASES
-}
+
+
+def get_release_archive_name(family_name: str, version: str) -> str:
+    return f"{family_name}-fonts-{version}.zip"
 
 # =======================================
 #  폰트 디렉터리 경로 구성

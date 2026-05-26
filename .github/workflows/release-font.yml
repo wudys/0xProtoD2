@@ -32,8 +32,8 @@ jobs:
               BUILT_FONT_VERSION_PATH,
               EN_FONT_VERSION_PATH,
               FONT_FAMILY_ALIASES,
+              get_release_archive_name,
               KO_FONT_VERSION_PATH,
-              RELEASE_ARCHIVE_NAMES,
               RELEASE_FILES_PATH,
               RELEASE_NOTES_PATH,
           )
@@ -90,7 +90,10 @@ jobs:
                       f"[ERROR] Nerd Font webfonts should not be released: {nerd_webfonts[0]}"
                   )
 
-              archive_path = release_dir / RELEASE_ARCHIVE_NAMES[family_name]
+              archive_path = release_dir / get_release_archive_name(
+                  family_name,
+                  release_version,
+              )
               with zipfile.ZipFile(archive_path, "w", zipfile.ZIP_DEFLATED) as archive:
                   for path in sorted(family_dir.rglob("*")):
                       if path.is_file():

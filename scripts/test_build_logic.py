@@ -237,6 +237,13 @@ class TestFontBuildProcess(unittest.TestCase):
             ],
         )
 
+    def test_release_archive_name_includes_family_and_version(self):
+        """릴리즈 archive 이름은 family와 release version을 함께 담습니다."""
+        self.assertEqual(
+            config.get_release_archive_name("ZxProtoD2", "1.2.3"),
+            "ZxProtoD2-fonts-1.2.3.zip",
+        )
+
     def test_run_build_fonts_processes_italic_family(self):
         """빌드 오케스트레이터는 Italic 계열도 준비하고 worker에 전달합니다."""
         import build
