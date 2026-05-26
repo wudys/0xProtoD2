@@ -123,7 +123,9 @@ def render_readme_preview(output_path: str = README_PREVIEW_IMAGE_PATH) -> bool:
         FONT_FAMILY_OUTPUT_PATHS["0xProtoD2"], "0xProtoD2-Regular.ttf"
     )
     nerd_font_path = os.path.join(
-        FONT_FAMILY_OUTPUT_PATHS["0xProtoD2"], "0xProtoD2-NL-NerdFontMono-Regular.ttf"
+        FONT_FAMILY_OUTPUT_PATHS["0xProtoD2"],
+        "NL",
+        "0xProtoD2-NL-NerdFontMono-Regular.ttf",
     )
     if not os.path.exists(font_path):
         print(f"[ERROR] 미리보기용 폰트를 찾을 수 없습니다: {font_path}")
