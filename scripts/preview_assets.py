@@ -158,7 +158,7 @@ def render_readme_preview(output_path: str = README_PREVIEW_IMAGE_PATH) -> bool:
         (54, 136, 'const greeting = "안녕하세요, 0xProtoD2";', ink),
         (54, 188, "ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz", ink),
         (54, 240, "0123456789 ()[]{}<> /\\ | @ # $ % & * + - _", ink),
-        (54, 316, "코드, 주석과 문서를 자연스럽게 살펴보세요.", ink),
+        (54, 316, "코드와 주석, 문서를 자연스럽게 살펴보세요.", ink),
         (54, 368, "Common ligature samples: -> <- => <= >= == === != !== && || ??", ink),
         (54, 410, "Code ligature samples: // /// :: ::= </> <$> |> <| >> <<", ink),
     ]

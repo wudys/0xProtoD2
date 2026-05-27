@@ -4,16 +4,16 @@
 ![License](https://img.shields.io/github/license/wudys/0xProtoD2?style=flat-square)
 ![Build Status](https://img.shields.io/github/actions/workflow/status/wudys/0xProtoD2/release-font.yml?style=flat-square)
 
-0xProtoD2는 영문 코드와 한글 주석, 문서를 조화롭게 표시하기 위한 프로그래밍 폰트입니다.
+0xProtoD2는 [0xProto](https://github.com/0xType/0xProto)의 코드 가독성과 [D2Coding](https://github.com/naver/d2codingfont)의 한글 경험을 함께 담은 프로그래밍 폰트입니다.
 
-대체 폰트나 보조 폰트를 지정하기 어려운 환경에서도 [0xProto](https://github.com/0xType/0xProto)의 코드 가독성과 [D2Coding](https://github.com/naver/d2codingfont)의 한글 경험을 함께 사용할 수 있도록 맞췄습니다.
+대체 폰트나 보조 폰트를 지정하기 어려운 환경에서도 코드와 주석, 문서를 자연스럽게 읽을 수 있습니다.
 
 ![0xProtoD2 preview](assets/preview.png)
 
 ## 특징
 
-- **코드 가독성**: 비슷한 글자를 구분하기 쉬운 형태, 작은 크기에서도 읽기 좋은 여백, 의미와 형태를 과하게 바꾸지 않는 ligature 정책을 따릅니다.
-- **자연스러운 한글 표시**: 한글 주석과 문서가 영문 코드와 같은 패밀리 안에서 어색하게 튀지 않도록 폭, 외곽선 크기, 좌우 여백을 조정했습니다.
+- **코드 가독성**: 비슷한 글자를 구분하기 쉬운 형태, 작은 크기에서도 읽기 좋은 여백, 의미와 형태를 과하게 바꾸지 않는 ligature 정책을 유지합니다.
+- **자연스러운 한글 표시**: 코드와 주석, 문서가 같은 패밀리 안에서 어색하게 튀지 않도록 한글 폭, 외곽선 크기, 좌우 여백을 조정했습니다.
 - **용도별 패밀리 제공**: Ligatures, No Ligatures, Nerd Font Mono, NL Nerd Font Mono를 제공합니다.
 - **빌드 설정 제공**: 한글 폭, 외곽선 크기, 좌우 여백을 빌드 시 조정할 수 있습니다.
 
