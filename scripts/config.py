@@ -7,7 +7,7 @@ import os
 ASSETS_PATH: str = "assets"
 # 최종 폰트 파일이 저장될 디렉터리입니다.
 BUILT_FONTS_PATH: str = os.path.join(ASSETS_PATH, "built_fonts")
-# 최종 산출물의 release version 파일
+# 최종 font output의 release version 파일
 BUILT_FONT_VERSION_PATH: str = "FONT_VERSION"
 # 릴리즈 압축 파일이 저장될 디렉터리입니다.
 RELEASE_FILES_PATH: str = "release_files"
@@ -54,11 +54,11 @@ NO_LIGATURE_FONT_PATH: str = os.path.join(EN_FONT_PATH, "No-Ligatures")
 KO_FONT_PATH: str = os.path.join(ASSETS_PATH, "ko_font")
 # 한글 폰트 버전 파일
 KO_FONT_VERSION_PATH: str = os.path.join(KO_FONT_PATH, "version")
-# 영문 너드 폰트 디렉터리 경로
+# 영문 Nerd Font Mono 디렉터리 경로
 EN_NERD_FONT_PATH: str = os.path.join(ASSETS_PATH, "en_nerd_font")
-# Nerd Font Patcher 버전 파일
+# Nerd Font Mono 패치 기준 버전 파일
 NERD_FONT_VERSION_PATH: str = os.path.join(EN_NERD_FONT_PATH, "version")
-# Nerd Font Patcher 배포 아카이브
+# Nerd Fonts Patcher 배포 archive
 FONT_PATCHER_URL: str = "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/FontPatcher.zip"
 FONT_PATCHER_CACHE_PATH: str = os.path.join(ASSETS_PATH, "font_patcher")
 

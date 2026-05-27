@@ -74,7 +74,7 @@ class TestFontBuildProcess(unittest.TestCase):
         self.assertEqual(len(glyph.transforms), 1)
 
     def test_italic_hangul_glyphs_are_slanted_after_merge(self):
-        """Italic 산출물의 한글은 fallback synthetic italic처럼 기울입니다."""
+        """Italic output의 한글은 fallback synthetic italic처럼 기울입니다."""
         from hangulify import slant_hangul_glyphs
 
         class FakeGlyph:
@@ -515,7 +515,7 @@ class TestFontBuildProcess(unittest.TestCase):
         )
 
     def test_update_font_metadata_sets_family_specific_unique_id(self):
-        """family alias별 산출물이 폰트 캐시에서 충돌하지 않도록 Unique ID를 갱신합니다."""
+        """family alias별 output이 폰트 캐시에서 충돌하지 않도록 Unique ID를 갱신합니다."""
         from hangulify import update_font_metadata
 
         class FakeFont:
@@ -537,7 +537,7 @@ class TestFontBuildProcess(unittest.TestCase):
         )
 
     def test_generated_font_output_paths_use_family_directories(self):
-        """최종 산출물은 family alias 폴더에서 구분합니다."""
+        """최종 output은 family alias 폴더에서 구분합니다."""
         from hangulify import get_output_dir
 
         self.assertEqual(
@@ -584,7 +584,7 @@ class TestFontBuildProcess(unittest.TestCase):
             )
 
     def test_generate_font_files_applies_built_font_version(self):
-        """최종 산출 폰트에는 repo FONT_VERSION 값을 version 메타데이터로 적용합니다."""
+        """최종 font output에는 repo FONT_VERSION 값을 version 메타데이터로 적용합니다."""
         from hangulify import generate_font_files
 
         class FakeFont:
@@ -617,7 +617,7 @@ class TestFontBuildProcess(unittest.TestCase):
         self.assertIn(("English (US)", "Version", "v1.2.3"), font.sfnt_names)
 
     def test_process_font_file_uses_given_output_directory(self):
-        """단일 폰트 처리는 호출자가 넘긴 출력 디렉터리를 그대로 사용합니다."""
+        """단일 폰트 처리는 호출자가 넘긴 output 디렉터리를 그대로 사용합니다."""
         import hangulify
 
         class FakeFont:
@@ -656,7 +656,7 @@ class TestFontBuildProcess(unittest.TestCase):
         )
 
     def test_process_font_file_can_limit_output_to_selected_family(self):
-        """선택 family 빌드는 지정한 alias 산출물만 생성합니다."""
+        """선택 family 빌드는 지정한 alias output만 생성합니다."""
         import hangulify
 
         class FakeFont:
@@ -766,7 +766,7 @@ class TestFontBuildProcess(unittest.TestCase):
             )
 
     def test_nerd_font_patch_can_be_skipped_when_outputs_and_source_version_match(self):
-        """Nerd Font 패치 결과물과 0xProto 버전이 같으면 패치 단계를 건너뜁니다."""
+        """Nerd Font Mono 패치 결과물과 기준 버전이 같으면 패치 단계를 건너뜁니다."""
         from build import get_expected_nerd_font_files, should_patch_nerd_fonts
 
         expected_files = get_expected_nerd_font_files(
@@ -795,7 +795,7 @@ class TestFontBuildProcess(unittest.TestCase):
             self.assertFalse(should_patch_nerd_fonts(expected_files, "v3.4.0", "v3.4.0"))
 
     def test_nerd_font_patch_runs_when_source_version_differs(self):
-        """0xProto 버전이 바뀌면 결과물이 있어도 다시 패치합니다."""
+        """기준 버전이 바뀌면 결과물이 있어도 다시 패치합니다."""
         from build import get_expected_nerd_font_files, should_patch_nerd_fonts
 
         expected_files = get_expected_nerd_font_files(
@@ -809,7 +809,7 @@ class TestFontBuildProcess(unittest.TestCase):
         self.assertTrue(should_patch_nerd_fonts(expected_files, "v3.3.0", "v3.4.0"))
 
     def test_nerd_font_patch_command_keeps_existing_arguments(self):
-        """Nerd Font 패치 명령 배열은 기존 옵션과 순서를 유지합니다."""
+        """Nerd Font Mono 패치 명령 배열은 기존 옵션과 순서를 유지합니다."""
         from build import _build_nerd_font_patch_command
 
         self.assertEqual(

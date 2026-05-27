@@ -167,7 +167,7 @@ def render_readme_preview(output_path: str = README_PREVIEW_IMAGE_PATH) -> bool:
     draw.rectangle((54, 486, 1226, 491), fill=rule)
     draw.text(
         (54, 516),
-        "included Regular / Bold / Italic / NL / Nerd Font Mono variants",
+        "Ligatures and NL families, with Nerd Font Mono variants",
         font=note_font,
         fill=muted,
     )

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-빌드 산출 폰트 파일 검증 스크립트
+빌드된 font output 검증 스크립트
 
 이 스크립트는 scripts/build.py build 실행 후 생성된 TTF/WOFF2 파일을 열어
 파일 간 메트릭과 설치 메타데이터가 일관적인지 검증합니다.
@@ -17,7 +17,7 @@ from config import BUILT_FONT_VERSION_PATH, BUILT_FONTS_PATH
 
 
 class TestBuiltFonts(unittest.TestCase):
-    """최종 산출 폰트 파일 검증 테스트."""
+    """최종 font output 검증 테스트."""
 
     HANGUL_RANGES = (
         (0x1100, 0x11FF),
@@ -153,7 +153,7 @@ class TestBuiltFonts(unittest.TestCase):
         return relpaths
 
     def test_built_fonts_have_expected_hangul_advance_widths(self):
-        """모든 산출 폰트의 한글 advance width는 variant별 목표값과 일치합니다."""
+        """모든 font output의 한글 advance width는 variant별 목표값과 일치합니다."""
         TTFont = self._require_fonttools()
 
         for font_path in self._built_font_paths():
@@ -215,7 +215,7 @@ class TestBuiltFonts(unittest.TestCase):
         self.assertEqual(duplicates, [])
 
     def test_built_fonts_use_release_version_metadata(self):
-        """모든 산출 폰트의 version name은 repo FONT_VERSION과 일치합니다."""
+        """모든 font output의 version name은 repo FONT_VERSION과 일치합니다."""
         TTFont = self._require_fonttools()
 
         with open(BUILT_FONT_VERSION_PATH, encoding="utf-8") as version_file:
@@ -232,7 +232,7 @@ class TestBuiltFonts(unittest.TestCase):
                 )
 
     def test_built_0x_and_zx_aliases_have_identical_hangul_metrics(self):
-        """0xProtoD2와 ZxProtoD2 alias 산출물은 family 이름 외 한글 메트릭이 같습니다."""
+        """0xProtoD2와 ZxProtoD2 alias output은 family 이름 외 한글 메트릭이 같습니다."""
         TTFont = self._require_fonttools()
 
         for zero_x_path in self._built_font_paths():
@@ -249,7 +249,7 @@ class TestBuiltFonts(unittest.TestCase):
                 )
 
     def test_built_0x_and_zx_aliases_only_differ_by_font_names(self):
-        """0xProtoD2와 ZxProtoD2 alias 산출물은 이름 테이블 외 폰트 데이터가 같습니다."""
+        """0xProtoD2와 ZxProtoD2 alias output은 이름 테이블 외 폰트 데이터가 같습니다."""
         TTFont = self._require_fonttools()
 
         for zero_x_path in self._built_font_paths(suffixes=(".ttf",)):
@@ -266,7 +266,7 @@ class TestBuiltFonts(unittest.TestCase):
                 )
 
     def test_built_italic_hangul_keeps_width_but_slants_outlines(self):
-        """Italic 산출물의 한글은 Regular와 폭은 같고 outline은 기울어져 다릅니다."""
+        """Italic output의 한글은 Regular와 폭은 같고 outline은 기울어져 다릅니다."""
         TTFont = self._require_fonttools()
 
         pairs = [

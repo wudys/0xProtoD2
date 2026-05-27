@@ -28,12 +28,12 @@ def print_usage():
     """사용법 안내 메시지를 출력합니다."""
     print(f"python {sys.argv[0]} <subcommand>\n")
     print("subcommand:")
-    print("    build [--family FAMILY] : assets 디렉터리의 폰트를 병합하고 출력합니다.")
+    print("    build [--family FAMILY] : assets 디렉터리의 폰트를 병합해 output 파일을 생성합니다.")
     print("    preview      : 빌드된 폰트의 HTML/PNG 미리보기를 생성합니다.")
     print("    test         : 폰트 빌드 환경을 테스트합니다.")
     print("    test:logic   : 빌드 로직과 스크립트 단위 테스트를 실행합니다.")
-    print("    test:outputs : 빌드 산출 폰트 파일을 검증합니다.")
-    print("    clean        : 출력 파일을 삭제합니다.")
+    print("    test:outputs : 빌드된 font output을 검증합니다.")
+    print("    clean        : output 파일을 삭제합니다.")
     print(f"\nfamily values: {', '.join(FONT_FAMILY_ALIASES)}")
 
 
@@ -52,7 +52,7 @@ def check_font_directories():
         "영문 폰트": EN_FONT_PATH,
         "영문 No Ligatures 폰트": NO_LIGATURE_FONT_PATH,
         "한글 폰트": KO_FONT_PATH,
-        "너드 폰트": EN_NERD_FONT_PATH
+        "영문 Nerd Font Mono": EN_NERD_FONT_PATH
     }
 
     missing_dirs = []
@@ -76,7 +76,7 @@ def check_font_directories():
 
 
 def find_patch_source_fonts(font_dir):
-    """Nerd Font 패치 대상이 되는 TTF 원본 폰트를 찾습니다."""
+    """Nerd Font Mono 패치 대상이 되는 TTF 원본 폰트를 찾습니다."""
     if not os.path.exists(font_dir):
         return []
 
@@ -138,7 +138,7 @@ def write_text_file(path, value):
 
 
 def should_patch_nerd_fonts(expected_files, current_version, source_version):
-    """결과물이 없거나 0xProto 원본 버전이 다르면 Nerd Font를 다시 패치합니다."""
+    """결과물이 없거나 기준 버전이 다르면 Nerd Font Mono를 다시 패치합니다."""
     if any(not os.path.exists(path) for path in expected_files):
         return True
     return current_version != source_version
@@ -161,17 +161,17 @@ def get_font_patcher_version(patcher_path=None):
 
 
 def get_nerd_font_dependency_version(source_version, patcher_version):
-    """Nerd Font 캐시를 무효화할 dependency version 문자열을 만듭니다."""
+    """Nerd Font Mono 패치 캐시를 무효화할 기준 버전 문자열을 만듭니다."""
     return f"0xProto={source_version}; NerdFontsPatcher={patcher_version}"
 
 
 def _download_and_extract_font_patcher(work_dir):
-    """Nerd Font Patcher를 다운로드하고 압축을 해제한 뒤 실행 파일 경로를 반환합니다."""
+    """Nerd Fonts Patcher를 다운로드하고 압축을 해제한 뒤 실행 파일 경로를 반환합니다."""
     archive_path = os.path.join(work_dir, "FontPatcher.zip")
-    print(f"[INFO] Nerd Font Patcher 다운로드 중: {FONT_PATCHER_URL}")
+    print(f"[INFO] Nerd Fonts Patcher 다운로드 중: {FONT_PATCHER_URL}")
     urllib.request.urlretrieve(FONT_PATCHER_URL, archive_path)
 
-    print("[INFO] Nerd Font Patcher 압축 해제 중")
+    print("[INFO] Nerd Fonts Patcher 압축 해제 중")
     with zipfile.ZipFile(archive_path) as archive:
         archive.extractall(work_dir)
 
@@ -180,7 +180,7 @@ def _download_and_extract_font_patcher(work_dir):
 
 
 def _get_or_download_font_patcher():
-    """로컬 캐시의 Nerd Font Patcher를 반환하고, 없으면 한 번만 다운로드합니다."""
+    """로컬 캐시의 Nerd Fonts Patcher를 반환하고, 없으면 한 번만 다운로드합니다."""
     patcher_path = os.path.join(FONT_PATCHER_CACHE_PATH, "font-patcher")
     if os.path.exists(patcher_path):
         return patcher_path
@@ -190,7 +190,7 @@ def _get_or_download_font_patcher():
 
 
 def _build_nerd_font_patch_command(fontforge_bin, patcher_path, font_path):
-    """Nerd Font Patcher 실행 명령을 만듭니다."""
+    """Nerd Fonts Patcher 실행 명령을 만듭니다."""
     return [
         fontforge_bin,
         "-script",
@@ -205,9 +205,9 @@ def _build_nerd_font_patch_command(fontforge_bin, patcher_path, font_path):
 
 
 def _patch_nerd_fonts_with_patcher(fontforge_bin, patcher_path, source_fonts):
-    """다운로드된 Nerd Font Patcher로 입력 폰트들을 패치합니다."""
+    """다운로드된 Nerd Fonts Patcher로 입력 폰트들을 패치합니다."""
     if not os.path.exists(patcher_path):
-        print(f"[ERROR] Nerd Font Patcher 실행 파일을 찾을 수 없습니다: {patcher_path}")
+        print(f"[ERROR] Nerd Fonts Patcher 실행 파일을 찾을 수 없습니다: {patcher_path}")
         return False
 
     os.makedirs(EN_NERD_FONT_PATH, exist_ok=True)
@@ -247,7 +247,7 @@ def patch_nerd_fonts():
         patcher_path = _get_or_download_font_patcher()
         patcher_version = get_font_patcher_version(patcher_path)
         if not patcher_version:
-            print(f"[ERROR] Nerd Font Patcher 버전을 읽을 수 없습니다: {patcher_path}")
+            print(f"[ERROR] Nerd Fonts Patcher 버전을 읽을 수 없습니다: {patcher_path}")
             return False
 
         dependency_version = get_nerd_font_dependency_version(
@@ -271,7 +271,7 @@ def patch_nerd_fonts():
 
         write_text_file(NERD_FONT_VERSION_PATH, dependency_version)
     except Exception as e:
-        print(f"[ERROR] Nerd Font 패치 중 오류 발생: {e}")
+        print(f"[ERROR] Nerd Font Mono 패치 중 오류 발생: {e}")
         return False
 
     return True
@@ -406,8 +406,8 @@ def run_python_test_script(script_name: str) -> bool:
 
 
 def clean():
-    """출력 파일을 삭제합니다."""
-    print("[INFO] 출력 파일 삭제 중")
+    """output 파일을 삭제합니다."""
+    print("[INFO] output 파일 삭제 중")
     if os.path.exists(BUILT_FONTS_PATH):
         shutil.rmtree(BUILT_FONTS_PATH)
         print(f"[INFO] {BUILT_FONTS_PATH} 디렉터리를 삭제했습니다.")

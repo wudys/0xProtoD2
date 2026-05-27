@@ -107,10 +107,9 @@ jobs:
               f"- D2Coding: {Path(KO_FONT_VERSION_PATH).read_text(encoding='utf-8').strip()}",
               "",
               "## Each archive contains",
-              "- Ligature fonts: TTF and WOFF2",
-              "- No-ligature fonts (`NL`): TTF and WOFF2",
-              "- Regular, Bold, and Italic styles",
-              "- Nerd Font Mono fonts (`NerdFontMono`, `NL-NerdFontMono`): TTF only",
+              "- Ligatures and No Ligatures (`NL`) families with Regular, Bold, and Italic styles",
+              "- WOFF2 files for Ligatures and `NL` families",
+              "- Nerd Font Mono variants (`NerdFontMono`, `NL-NerdFontMono`) as TTF only",
               "",
           ]
           release_notes = "\n".join(release_notes_lines)

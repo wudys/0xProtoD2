@@ -130,7 +130,7 @@ def process_hangul_glyphs(
 
 
 def slant_hangul_glyphs(font: fontforge.font, italic_angle: float) -> None:
-    """Italic 산출물의 한글 글리프를 target font의 italic angle에 맞춰 기울입니다."""
+    """Italic output의 한글 글리프를 target font의 italic angle에 맞춰 기울입니다."""
     if not italic_angle:
         return
 
@@ -278,7 +278,7 @@ def get_font_extensions(is_nerd_font: bool) -> list[str]:
 
 
 def read_built_font_version() -> str | None:
-    """최종 산출 폰트에 적용할 release version을 읽습니다."""
+    """최종 font output에 적용할 release version을 읽습니다."""
     if not os.path.exists(BUILT_FONT_VERSION_PATH):
         return None
 
@@ -289,7 +289,7 @@ def read_built_font_version() -> str | None:
 
 
 def apply_built_font_version(font: fontforge.font, version: str) -> None:
-    """최종 산출 폰트의 version 메타데이터를 release version으로 맞춥니다."""
+    """최종 font output의 version 메타데이터를 release version으로 맞춥니다."""
     font.version = version
     if hasattr(font, "appendSFNTName"):
         font.appendSFNTName("English (US)", "Version", version)
@@ -303,7 +303,7 @@ def generate_font_files(
     """최종 TTF 및 WOFF2 폰트 파일을 생성하고 내보냅니다."""
     built_font_version = read_built_font_version()
     if not built_font_version:
-        print(f"[ERROR] 최종 산출물 버전 파일을 찾을 수 없습니다: {BUILT_FONT_VERSION_PATH}")
+        print(f"[ERROR] 최종 font output 버전 파일을 찾을 수 없습니다: {BUILT_FONT_VERSION_PATH}")
         return False
 
     apply_built_font_version(font, built_font_version)
