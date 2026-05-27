@@ -17,15 +17,16 @@
 
 [Releases](https://github.com/wudys/0xProtoD2/releases/latest)에서 원하는 패밀리를 내려받아 설치합니다.
 
-| 버전                        | 패밀리                        | 제공 파일  | 추천 환경                                     |
-| --------------------------- | ----------------------------- | ---------- | --------------------------------------------- |
-| 기본                        | `0xProtoD2`                   | TTF, WOFF2 | 코드 에디터, IDE                              |
-| No Ligatures                | `0xProtoD2 NL`                | TTF, WOFF2 | ligature를 완전히 끄고 싶은 환경              |
-| Nerd Font Mono              | `0xProtoD2 Nerd Font Mono`    | TTF        | 터미널에서 아이콘과 ligature를 함께 쓰는 환경 |
-| No Ligatures Nerd Font Mono | `0xProtoD2 NL Nerd Font Mono` | TTF        | 터미널, Vim/Neovim의 안정적인 기본 선택       |
+| 버전                        | 패밀리                        | 추천 환경                                     |
+| --------------------------- | ----------------------------- | --------------------------------------------- |
+| 기본                        | `0xProtoD2`                   | 코드 에디터, IDE                              |
+| No Ligatures                | `0xProtoD2 NL`                | ligature를 완전히 끄고 싶은 환경              |
+| Nerd Font Mono              | `0xProtoD2 Nerd Font Mono`    | 터미널에서 아이콘과 ligature를 함께 쓰는 환경 |
+| No Ligatures Nerd Font Mono | `0xProtoD2 NL Nerd Font Mono` | 터미널, Vim/Neovim의 안정적인 기본 선택       |
 
-각 버전은 `ZxProtoD2` 호환 패밀리로도 제공합니다. Italic의 한글 글리프는 D2Coding Regular를 바탕으로 하되, Italic 산출물에서는 기울임 보정을 적용합니다.
-릴리스 압축 파일 안에서 `NL` 패밀리는 `NL/` 하위 폴더에 들어갑니다.
+각 버전은 `ZxProtoD2` 호환 패밀리로도 제공합니다.
+
+Italic의 한글 글리프는 D2Coding Regular를 바탕으로 하되, Italic 산출물에서는 기울임 보정을 적용합니다.
 
 ## 빌드
 
