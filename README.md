@@ -4,9 +4,9 @@
 ![License](https://img.shields.io/github/license/wudys/0xProtoD2?style=flat-square)
 ![Build Status](https://img.shields.io/github/actions/workflow/status/wudys/0xProtoD2/release-font.yml?style=flat-square)
 
-0xProtoD2는 영문 코드와 한글 주석, 문서를 한 패밀리 안에서 균형 있게 표시하기 위한 프로그래밍 폰트입니다.
+0xProtoD2는 영문 코드와 한글 주석, 문서를 조화롭게 표시하기 위한 프로그래밍 폰트입니다.
 
-대체 폰트나 보조 폰트를 지정하기 어려운 환경에서도 [0xProto](https://github.com/0xType/0xProto)의 코드 가독성과 [D2Coding](https://github.com/naver/d2codingfont)의 한글 프로그래밍 폰트 경험을 함께 사용할 수 있도록 맞췄습니다.
+대체 폰트나 보조 폰트를 지정하기 어려운 환경에서도 [0xProto](https://github.com/0xType/0xProto)의 코드 가독성과 [D2Coding](https://github.com/naver/d2codingfont)의 한글 경험을 함께 사용할 수 있도록 맞췄습니다.
 
 ![0xProtoD2 preview](assets/preview.png)
 
@@ -66,10 +66,10 @@ python3 scripts/build.py build
 # 특정 family만 빌드(0xProtoD2 또는 ZxProtoD2)
 python3 scripts/build.py build --family ZxProtoD2
 
-# 빌드 로직과 스크립트 단위 테스트
+# 빌드 로직 테스트
 python3 scripts/build.py test:logic
 
-# 빌드 결과 검증
+# 빌드 결과 테스트
 python3 scripts/build.py test:outputs
 ```
 
