@@ -14,8 +14,7 @@
 
 - **코드 가독성**: 비슷한 글자를 구분하기 쉬운 형태, 작은 크기에서도 읽기 좋은 여백, 의미와 형태를 과하게 바꾸지 않는 ligature 정책을 유지합니다.
 - **자연스러운 한글 표시**: 코드와 주석, 문서가 같은 패밀리 안에서 어색하게 튀지 않도록 한글 폭, 외곽선 크기, 좌우 여백을 조정했습니다.
-- **용도별 패밀리 제공**: Ligatures, No Ligatures, Nerd Font Mono, NL Nerd Font Mono를 제공합니다.
-- **빌드 설정 제공**: 한글 폭, 외곽선 크기, 좌우 여백을 빌드 시 조정할 수 있습니다.
+- **용도별 패밀리 제공**: Ligatures, No Ligatures, Mono Nerd Font, NL Mono Nerd Font를 제공합니다.
 
 ## 설치
 
@@ -25,8 +24,8 @@
 | --------------------------- | ----------------------------- | --------------------------------------------- |
 | Ligatures                   | `0xProtoD2`                   | 코드 에디터, IDE                              |
 | No Ligatures                | `0xProtoD2 NL`                | ligature를 완전히 끄고 싶은 환경              |
-| Nerd Font Mono              | `0xProtoD2 Nerd Font Mono`    | 터미널에서 아이콘과 ligature를 함께 쓰는 환경 |
-| No Ligatures Nerd Font Mono | `0xProtoD2 NL Nerd Font Mono` | 터미널, Vim/Neovim의 안정적인 기본 선택       |
+| Mono Nerd Font              | `0xProtoD2 Mono Nerd Font`    | 터미널에서 아이콘과 ligature를 함께 쓰는 환경 |
+| No Ligatures Mono Nerd Font | `0xProtoD2 NL Mono Nerd Font` | 터미널, Vim/Neovim의 안정적인 기본 선택       |
 
 각 패밀리는 Regular, Bold, Italic 스타일을 포함하며, `ZxProtoD2` 호환 패밀리로도 제공합니다.
 
@@ -100,6 +99,10 @@ Nerd Font Mono 계열은 터미널 정렬에 맞춘 별도 기본값을 사용�
 | `HANGUL_NERD_MONO_WIDTH_RATIO`  |   `2.0` | Nerd Font Mono 계열의 한글 advance width 비율 |
 | `HANGUL_NERD_MONO_GLYPH_SCALE`  |  `0.94` | Nerd Font Mono 계열의 한글 외곽선 크기        |
 | `HANGUL_NERD_MONO_SIDE_BEARING` |    `90` | Nerd Font Mono 계열의 한글 좌우 여백          |
+
+## 다른 스타일의 폰트를 찾고 계신가요?
+
+0xProtoD2보다 둥글고 차분한 인상의 폰트를 원한다면 [LythD2](https://github.com/wudys/LythD2)도 함께 비교해보세요.
 
 ## FAQ
 
