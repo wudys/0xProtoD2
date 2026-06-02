@@ -3,12 +3,10 @@ from __future__ import annotations
 import json
 import os
 
-from PIL import Image, ImageDraw, ImageFont
-from fontTools.ttLib import TTFont
-
 from config import ASSETS_PATH, FONT_FAMILY_OUTPUT_PATHS
 from font_settings import get_hangul_settings
-
+from fontTools.ttLib import TTFont
+from PIL import Image, ImageDraw, ImageFont
 
 PREVIEW_PATH = "preview"
 README_PREVIEW_IMAGE_PATH = os.path.join(ASSETS_PATH, "preview.png")
@@ -125,7 +123,7 @@ def render_readme_preview(output_path: str = README_PREVIEW_IMAGE_PATH) -> bool:
     nerd_font_path = os.path.join(
         FONT_FAMILY_OUTPUT_PATHS["0xProtoD2"],
         "NL",
-        "0xProtoD2-NL-NerdFontMono-Regular.ttf",
+        "0xProtoD2-NL-MonoNerdFont-Regular.ttf",
     )
     if not os.path.exists(font_path):
         print(f"[ERROR] 미리보기용 폰트를 찾을 수 없습니다: {font_path}")
@@ -150,7 +148,7 @@ def render_readme_preview(output_path: str = README_PREVIEW_IMAGE_PATH) -> bool:
 
     draw.rectangle((0, 0, 1280, 88), fill=bar)
     draw.text((54, 28), "0xProtoD2", font=header_font, fill="white")
-    draw.text((258, 24), "\uf121", font=title_icon_font, fill="white")
+    draw.text((256, 26), "\uf121", font=title_icon_font, fill="white")
     draw.text((926, 24), "\uf09b", font=github_icon_font, fill="white")
     draw.text((966, 32), "wudys/0xProtoD2", font=footer_font, fill="white")
 

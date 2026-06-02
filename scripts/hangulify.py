@@ -70,9 +70,9 @@ def update_family_name(original_family_name: str, old_str: str, new_str: str) ->
 def format_family_name(family_name: str) -> str:
     """파일 친화적인 원본 family 이름을 UI에 표시할 family 이름으로 바꿉니다."""
     if "NLNerdFontMono" in family_name:
-        return family_name.replace("NLNerdFontMono", " NL Nerd Font Mono")
+        return family_name.replace("NLNerdFontMono", " NL Mono Nerd Font")
     if "NerdFontMono" in family_name:
-        return family_name.replace("NerdFontMono", " Nerd Font Mono")
+        return family_name.replace("NerdFontMono", " Mono Nerd Font")
     if family_name.endswith("NL"):
         return f"{family_name[:-2]} NL"
     return family_name
@@ -81,8 +81,8 @@ def format_family_name(family_name: str) -> str:
 def format_postscript_family_name(family_name: str) -> str:
     """공백 없는 PostScript/file family 이름을 만듭니다."""
     return (
-        family_name.replace(" NL Nerd Font Mono", "-NL-NerdFontMono")
-        .replace(" Nerd Font Mono", "-NerdFontMono")
+        family_name.replace(" NL Mono Nerd Font", "-NL-MonoNerdFont")
+        .replace(" Mono Nerd Font", "-MonoNerdFont")
         .replace(" NL", "-NL")
     )
 

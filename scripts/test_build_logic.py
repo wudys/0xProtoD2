@@ -495,19 +495,19 @@ class TestFontBuildProcess(unittest.TestCase):
         )
         self.assertEqual(
             update_family_name("0xProtoNL Nerd Font Mono", "0xProto", "ZxProtoD2"),
-            "ZxProtoD2 NL Nerd Font Mono",
+            "ZxProtoD2 NL Mono Nerd Font",
         )
         self.assertEqual(
             update_family_name("0xProto Nerd Font Mono", "0xProto", "ZxProtoD2"),
-            "ZxProtoD2 Nerd Font Mono",
+            "ZxProtoD2 Mono Nerd Font",
         )
         self.assertEqual(
-            format_postscript_family_name("0xProtoD2 NL Nerd Font Mono"),
-            "0xProtoD2-NL-NerdFontMono",
+            format_postscript_family_name("0xProtoD2 NL Mono Nerd Font"),
+            "0xProtoD2-NL-MonoNerdFont",
         )
         self.assertEqual(
-            format_postscript_family_name("0xProtoD2 Nerd Font Mono"),
-            "0xProtoD2-NerdFontMono",
+            format_postscript_family_name("0xProtoD2 Mono Nerd Font"),
+            "0xProtoD2-MonoNerdFont",
         )
         self.assertEqual(
             format_postscript_family_name("0xProtoD2 NL"),
@@ -545,7 +545,7 @@ class TestFontBuildProcess(unittest.TestCase):
             os.path.join(BUILT_FONTS_PATH, "0xProtoD2"),
         )
         self.assertEqual(
-            get_output_dir("ZxProtoD2 Nerd Font Mono"),
+            get_output_dir("ZxProtoD2 Mono Nerd Font"),
             os.path.join(BUILT_FONTS_PATH, "ZxProtoD2"),
         )
         self.assertEqual(
@@ -553,7 +553,7 @@ class TestFontBuildProcess(unittest.TestCase):
             os.path.join(BUILT_FONTS_PATH, "0xProtoD2", "NL"),
         )
         self.assertEqual(
-            get_output_dir("ZxProtoD2 NL Nerd Font Mono"),
+            get_output_dir("ZxProtoD2 NL Mono Nerd Font"),
             os.path.join(BUILT_FONTS_PATH, "ZxProtoD2", "NL"),
         )
 

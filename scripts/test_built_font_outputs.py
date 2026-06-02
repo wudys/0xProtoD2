@@ -145,9 +145,9 @@ class TestBuiltFonts(unittest.TestCase):
             for style in ("Bold", "Italic", "Regular"):
                 relpaths.add(f"{family_name}/{family_name}-{style}.ttf")
                 relpaths.add(f"{family_name}/NL/{family_name}-NL-{style}.ttf")
-                relpaths.add(f"{family_name}/{family_name}-NerdFontMono-{style}.ttf")
+                relpaths.add(f"{family_name}/{family_name}-MonoNerdFont-{style}.ttf")
                 relpaths.add(
-                    f"{family_name}/NL/{family_name}-NL-NerdFontMono-{style}.ttf"
+                    f"{family_name}/NL/{family_name}-NL-MonoNerdFont-{style}.ttf"
                 )
 
         return relpaths
@@ -158,7 +158,7 @@ class TestBuiltFonts(unittest.TestCase):
 
         for font_path in self._built_font_paths():
             expected_width = (
-                1240 if "NerdFontMono" in os.path.basename(font_path) else 1000
+                1240 if "MonoNerdFont" in os.path.basename(font_path) else 1000
             )
             font = TTFont(font_path)
             bad_glyphs = [
@@ -273,22 +273,22 @@ class TestBuiltFonts(unittest.TestCase):
             ("0xProtoD2-Regular.ttf", "0xProtoD2-Italic.ttf"),
             ("0xProtoD2-NL-Regular.ttf", "0xProtoD2-NL-Italic.ttf"),
             (
-                "0xProtoD2-NerdFontMono-Regular.ttf",
-                "0xProtoD2-NerdFontMono-Italic.ttf",
+                "0xProtoD2-MonoNerdFont-Regular.ttf",
+                "0xProtoD2-MonoNerdFont-Italic.ttf",
             ),
             (
-                "0xProtoD2-NL-NerdFontMono-Regular.ttf",
-                "0xProtoD2-NL-NerdFontMono-Italic.ttf",
+                "0xProtoD2-NL-MonoNerdFont-Regular.ttf",
+                "0xProtoD2-NL-MonoNerdFont-Italic.ttf",
             ),
             ("ZxProtoD2-Regular.ttf", "ZxProtoD2-Italic.ttf"),
             ("ZxProtoD2-NL-Regular.ttf", "ZxProtoD2-NL-Italic.ttf"),
             (
-                "ZxProtoD2-NerdFontMono-Regular.ttf",
-                "ZxProtoD2-NerdFontMono-Italic.ttf",
+                "ZxProtoD2-MonoNerdFont-Regular.ttf",
+                "ZxProtoD2-MonoNerdFont-Italic.ttf",
             ),
             (
-                "ZxProtoD2-NL-NerdFontMono-Regular.ttf",
-                "ZxProtoD2-NL-NerdFontMono-Italic.ttf",
+                "ZxProtoD2-NL-MonoNerdFont-Regular.ttf",
+                "ZxProtoD2-NL-MonoNerdFont-Italic.ttf",
             ),
         ]
 
