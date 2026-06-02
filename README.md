@@ -4,7 +4,7 @@
 ![License](https://img.shields.io/github/license/wudys/0xProtoD2?style=flat-square)
 ![Build Status](https://img.shields.io/github/actions/workflow/status/wudys/0xProtoD2/release-font.yml?style=flat-square)
 
-0xProtoD2는 [0xProto](https://github.com/0xType/0xProto)의 코드 가독성과 [D2Coding](https://github.com/naver/d2codingfont)의 한글 경험을 함께 담은 프로그래밍 폰트입니다.
+0xProtoD2는 [0xProto](https://github.com/0xType/0xProto)의 또렷하고 단단한 글자 모양과 [D2Coding](https://github.com/naver/d2codingfont)의 한글 경험을 함께 담은 프로그래밍 폰트입니다.
 
 대체 폰트나 보조 폰트를 지정하기 어려운 환경에서도 코드와 주석, 문서를 자연스럽게 읽을 수 있습니다.
 
@@ -12,7 +12,7 @@
 
 ## 특징
 
-- **코드 가독성**: 비슷한 글자를 구분하기 쉬운 형태, 작은 크기에서도 읽기 좋은 여백, 의미와 형태를 과하게 바꾸지 않는 ligature 정책을 유지합니다.
+- **또렷한 글자 구분**: 비슷한 글자를 구분하기 쉬운 형태, 작은 크기에서도 읽기 좋은 여백, 의미와 형태를 과하게 바꾸지 않는 ligature 정책을 유지합니다.
 - **자연스러운 한글 표시**: 코드와 주석, 문서가 같은 패밀리 안에서 어색하게 튀지 않도록 한글 폭, 외곽선 크기, 좌우 여백을 조정했습니다.
 - **용도별 패밀리 제공**: Ligatures, No Ligatures, Mono Nerd Font, NL Mono Nerd Font를 제공합니다.
 
@@ -100,9 +100,9 @@ Nerd Font Mono 계열은 터미널 정렬에 맞춘 별도 기본값을 사용�
 | `HANGUL_NERD_MONO_GLYPH_SCALE`  |  `0.94` | Nerd Font Mono 계열의 한글 외곽선 크기        |
 | `HANGUL_NERD_MONO_SIDE_BEARING` |    `90` | Nerd Font Mono 계열의 한글 좌우 여백          |
 
-## 다른 스타일의 폰트를 찾고 계신가요?
+## 다른 스타일도 있어요
 
-0xProtoD2보다 둥글고 차분한 인상의 폰트를 원한다면 [LythD2](https://github.com/wudys/LythD2)도 함께 비교해보세요.
+조금 더 둥글고 차분하게 보이는 코딩 폰트를 원한다면 [LythD2](https://github.com/wudys/LythD2)도 함께 비교해보세요.
 
 ## FAQ
 
