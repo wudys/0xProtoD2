@@ -15,7 +15,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Prepare release files
         run: |
@@ -45,18 +45,18 @@ jobs:
               "{family}-Bold.woff2",
               "{family}-Italic.ttf",
               "{family}-Italic.woff2",
-              "{family}-NerdFontMono-Regular.ttf",
-              "{family}-NerdFontMono-Bold.ttf",
-              "{family}-NerdFontMono-Italic.ttf",
+              "{family}-MonoNerdFont-Regular.ttf",
+              "{family}-MonoNerdFont-Bold.ttf",
+              "{family}-MonoNerdFont-Italic.ttf",
               "NL/{family}-NL-Regular.ttf",
               "NL/{family}-NL-Regular.woff2",
               "NL/{family}-NL-Bold.ttf",
               "NL/{family}-NL-Bold.woff2",
               "NL/{family}-NL-Italic.ttf",
               "NL/{family}-NL-Italic.woff2",
-              "NL/{family}-NL-NerdFontMono-Regular.ttf",
-              "NL/{family}-NL-NerdFontMono-Bold.ttf",
-              "NL/{family}-NL-NerdFontMono-Italic.ttf",
+              "NL/{family}-NL-MonoNerdFont-Regular.ttf",
+              "NL/{family}-NL-MonoNerdFont-Bold.ttf",
+              "NL/{family}-NL-MonoNerdFont-Italic.ttf",
           ]
 
           built_fonts_dir = Path(BUILT_FONTS_PATH)
@@ -84,7 +84,7 @@ jobs:
                   if not font_path.is_file():
                       raise SystemExit(f"[ERROR] Missing release font: {font_path}")
 
-              nerd_webfonts = list(family_dir.rglob("*NerdFontMono*.woff2"))
+              nerd_webfonts = list(family_dir.rglob("*MonoNerdFont*.woff2"))
               if nerd_webfonts:
                   raise SystemExit(
                       f"[ERROR] Nerd Font webfonts should not be released: {nerd_webfonts[0]}"
@@ -109,7 +109,7 @@ jobs:
               "## Each archive contains",
               "- Ligatures and No Ligatures (`NL`) families with Regular, Bold, and Italic styles",
               "- WOFF2 files for Ligatures and `NL` families",
-              "- Nerd Font Mono variants (`NerdFontMono`, `NL-NerdFontMono`) as TTF only",
+              "- Mono Nerd Font variants (`MonoNerdFont`, `NL-MonoNerdFont`) as TTF only",
               "",
           ]
           release_notes = "\n".join(release_notes_lines)
@@ -117,7 +117,7 @@ jobs:
           PY
 
       - name: Create release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: release_files/*.zip
           name: Release ${{ github.ref_name }}
