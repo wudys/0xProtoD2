@@ -115,7 +115,7 @@ class TestFontBuildProcess(unittest.TestCase):
         self.assertEqual(font_settings.get_hangul_advance_width(True), 1240)
         self.assertAlmostEqual(
             font_settings.get_hangul_outline_scale(1000, True),
-            1.081,
+            1.0584,
             places=4,
         )
 

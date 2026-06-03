@@ -18,8 +18,8 @@ HANGUL_SETTINGS = (
 )
 HANGUL_NERD_MONO_SETTINGS = (
     _float_env("HANGUL_NERD_MONO_WIDTH_RATIO", "2.0"),
-    _float_env("HANGUL_NERD_MONO_GLYPH_SCALE", "0.94"),
-    _int_env("HANGUL_NERD_MONO_SIDE_BEARING", "90"),
+    _float_env("HANGUL_NERD_MONO_GLYPH_SCALE", "0.945"),
+    _int_env("HANGUL_NERD_MONO_SIDE_BEARING", "120"),
 )
 
 

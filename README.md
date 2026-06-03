@@ -31,7 +31,7 @@
 
 Italic의 한글 글리프는 D2Coding Regular를 바탕으로 하되, Italic 빌드에서는 기울임 보정을 적용합니다.
 
-## 다른 스타일도 있어요
+## 이런 폰트도 있어요
 
 조금 더 둥글고 차분하게 보이는 코딩 폰트를 원한다면 [LythD2](https://github.com/wudys/LythD2)도 함께 비교해보세요.
 
@@ -101,8 +101,8 @@ Nerd Font Mono 계열은 터미널 정렬에 맞춘 별도 기본값을 사용�
 | `HANGUL_GLYPH_SCALE`            |  `1.09` | 폰트의 기본 한글 외곽선 크기                  |
 | `HANGUL_SIDE_BEARING`           |   `100` | 폰트의 기본 한글 좌우 여백                    |
 | `HANGUL_NERD_MONO_WIDTH_RATIO`  |   `2.0` | Nerd Font Mono 계열의 한글 advance width 비율 |
-| `HANGUL_NERD_MONO_GLYPH_SCALE`  |  `0.94` | Nerd Font Mono 계열의 한글 외곽선 크기        |
-| `HANGUL_NERD_MONO_SIDE_BEARING` |    `90` | Nerd Font Mono 계열의 한글 좌우 여백          |
+| `HANGUL_NERD_MONO_GLYPH_SCALE`  | `0.945` | Nerd Font Mono 계열의 한글 외곽선 크기        |
+| `HANGUL_NERD_MONO_SIDE_BEARING` |   `120` | Nerd Font Mono 계열의 한글 좌우 여백          |
 
 ## FAQ
 
